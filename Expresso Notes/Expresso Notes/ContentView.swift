@@ -106,7 +106,7 @@ struct ContentView: View {
                                 .scaledToFit()
                                 .frame(width: 160, height: 100)
                         }
-                        .offset(y: -60)
+                        .offset(y: -70)
                     }
                     .padding()
                     .background(Color.white.opacity(0.8))

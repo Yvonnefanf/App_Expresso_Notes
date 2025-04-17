@@ -7,75 +7,172 @@
 
 import SwiftUI
 import FirebaseCore
+import WebKit
+
+// GIF 视图组件
+struct GIFView: UIViewRepresentable {
+    let gifName: String
+    
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.backgroundColor = .clear
+        webView.isOpaque = false
+        webView.scrollView.isScrollEnabled = false
+        
+        // 设置 WKWebView 的缩放模式
+        webView.scrollView.contentMode = .scaleAspectFit
+        
+        // 添加自适应大小的 CSS
+        let css = """
+        <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        </style>
+        """
+        
+        // 从项目根目录加载 GIF
+        if let gifPath = Bundle.main.path(forResource: gifName, ofType: "gif"),
+           let gifData = try? Data(contentsOf: URL(fileURLWithPath: gifPath)) {
+            print("成功加载 GIF 文件：\(gifName)")
+            let html = """
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                \(css)
+            </head>
+            <body>
+                <img src="data:image/gif;base64,\(gifData.base64EncodedString())" />
+            </body>
+            </html>
+            """
+            webView.loadHTMLString(html, baseURL: nil)
+        } else {
+            print("无法加载 GIF 文件：\(gifName)")
+        }
+        
+        return webView
+    }
+    
+    func updateUIView(_ uiView: WKWebView, context: Context) {}
+}
 
 struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
     @State private var showLogin = false
     @State private var showRegister = false
+    @State private var showGIF = false
     
     var body: some View {
-        if authManager.isLoggedIn {
-            // 已登录状态显示的内容
-            VStack {
-                Image(systemName: "cup.and.saucer.fill")
-                    .imageScale(.large)
-                    .foregroundStyle(.tint)
-                Text("Hello, Expresso Notes!")
-                
-                Button(action: {
-                    authManager.signOut()
-                }) {
-                    Text("登出")
-                        .foregroundColor(.red)
-                        .padding()
-                }
-            }
-            .padding()
-        } else {
-            // 未登录状态显示的内容
-            VStack(spacing: 20) {
-                Image(systemName: "cup.and.saucer.fill")
-                    .imageScale(.large)
-                    .foregroundStyle(.tint)
-                    .padding(.bottom, 20)
-                
-                Text("欢迎使用 Expresso Notes")
-                    .font(.title)
-                    .bold()
-                
-                Button(action: {
-                    print("点击登录按钮")
-                    showLogin = true
-                }) {
-                    Text("登录")
+        ZStack {
+            // 背景
+            if authManager.isLoggedIn {
+                VStack {
+                    ZStack {
+                        // 静态图片
+                        Image("background")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 400)
+                            .opacity(showGIF ? 0 : 1)
+                        
+                        // GIF 图片
+                        GIFView(gifName: "background")
+                            .frame(width: 400)
+                            .opacity(showGIF ? 1 : 0)
+                    }
+                    .animation(.easeInOut(duration: 0.001), value: showGIF)
+                    
+                    Button(action: {
+                        withAnimation {
+                            showGIF.toggle()
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: showGIF ? "photo" : "play.fill")
+                            Text(showGIF ? "显示静态图" : "显示动态图")
+                        }
                         .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
                         .background(Color.blue)
-                        .cornerRadius(10)
+                        .cornerRadius(8)
+                    }
+                    .padding(.top, 20)
+                    
+                    Button(action: {
+                        authManager.signOut()
+                    }) {
+                        Text("登出")
+                            .foregroundColor(.red)
+                            .padding(.vertical, 8)
+                    }
+                    .padding(.top, 10)
                 }
-                
-                Button(action: {
-                    print("点击注册按钮")
-                    showRegister = true
-                }) {
-                    Text("注册")
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green)
-                        .cornerRadius(10)
+                .padding()
+                .background(Color.white.opacity(0.8))
+                .cornerRadius(10)
+            } else {
+                // 未登录状态显示的内容
+                VStack(spacing: 15) {
+                    Image(systemName: "cup.and.saucer.fill")
+                        .imageScale(.medium)
+                        .padding(.bottom, 10)
+                    
+                    Text("欢迎使用 Expresso Notes")
+                        .font(.title3)
+                        .bold()
+                    
+                    Button(action: {
+                        print("点击登录按钮")
+                        showLogin = true
+                    }) {
+                        Text("登录")
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(Color.blue)
+                            .cornerRadius(8)
+                    }
+                    .frame(width: 200)
+                    
+                    Button(action: {
+                        print("点击注册按钮")
+                        showRegister = true
+                    }) {
+                        Text("注册")
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(Color.green)
+                            .cornerRadius(8)
+                    }
+                    .frame(width: 200)
                 }
+                .padding()
+                .background(Color.white.opacity(0.8))
+                .cornerRadius(10)
+                .frame(width: 280)
             }
-            .padding()
-            .sheet(isPresented: $showLogin) {
-                LoginView()
-                    .environmentObject(authManager)
-            }
-            .sheet(isPresented: $showRegister) {
-                LoginView(isRegistering: true)
-                    .environmentObject(authManager)
-            }
+        }
+        .sheet(isPresented: $showLogin) {
+            LoginView()
+                .environmentObject(authManager)
+        }
+        .sheet(isPresented: $showRegister) {
+            LoginView(isRegistering: true)
+                .environmentObject(authManager)
         }
     }
 }

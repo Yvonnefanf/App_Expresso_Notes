@@ -73,56 +73,74 @@ struct ContentView: View {
     @State private var showLogin = false
     @State private var showRegister = false
     @State private var showGIF = false
+    @State private var showLogoutAlert = false
     
     var body: some View {
         ZStack {
             // 背景
             if authManager.isLoggedIn {
-                VStack {
-                    ZStack {
-                        // 静态图片
-                        Image("background")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 400)
-                            .opacity(showGIF ? 0 : 1)
+                ZStack {
+                    VStack(spacing: 0) {
+                        ZStack {
+                            // 静态图片
+                            Image("background")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 400)
+                                .opacity(showGIF ? 0 : 1)
+                            
+                            // GIF 图片
+                            GIFView(gifName: "background")
+                                .frame(width: 400)
+                                .opacity(showGIF ? 1 : 0)
+                        }
+                        .animation(.easeInOut(duration: 0.001), value: showGIF)
                         
-                        // GIF 图片
-                        GIFView(gifName: "background")
-                            .frame(width: 400)
-                            .opacity(showGIF ? 1 : 0)
-                    }
-                    .animation(.easeInOut(duration: 0.001), value: showGIF)
-                    
-                    Button(action: {
-                        withAnimation {
-                            showGIF.toggle()
+                        Button(action: {
+                            withAnimation {
+                                showGIF.toggle()
+                            }
+                        }) {
+                            Image("start_btn")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 160, height: 100)
                         }
-                    }) {
+                        .offset(y: -60)
+                    }
+                    .padding()
+                    .background(Color.white.opacity(0.8))
+                    .cornerRadius(10)
+                    
+                    // 登出按钮放在右上角
+                    VStack {
                         HStack {
-                            Image(systemName: showGIF ? "photo" : "play.fill")
-                            Text(showGIF ? "显示静态图" : "显示动态图")
+                            Spacer()
+                            Button(action: {
+                                showLogoutAlert = true
+                            }) {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.gray)
+                                    .padding(12)
+                                    .background(Color(red: 0.96, green: 0.93, blue: 0.82))
+                                    .clipShape(Circle())
+                                    .shadow(radius: 2)
+                            }
+                            .alert("确认登出", isPresented: $showLogoutAlert) {
+                                Button("取消", role: .cancel) { }
+                                Button("确认", role: .destructive) {
+                                    authManager.signOut()
+                                }
+                            } message: {
+                                Text("确定要退出登录吗？")
+                            }
+                            .padding(.top, 10)
+                            .padding(.trailing, 35)
                         }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(Color.blue)
-                        .cornerRadius(8)
+                        Spacer()
                     }
-                    .padding(.top, 20)
-                    
-                    Button(action: {
-                        authManager.signOut()
-                    }) {
-                        Text("登出")
-                            .foregroundColor(.red)
-                            .padding(.vertical, 8)
-                    }
-                    .padding(.top, 10)
                 }
-                .padding()
-                .background(Color.white.opacity(0.8))
-                .cornerRadius(10)
             } else {
                 // 未登录状态显示的内容
                 VStack(spacing: 15) {

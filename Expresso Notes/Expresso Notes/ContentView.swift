@@ -74,73 +74,127 @@ struct ContentView: View {
     @State private var showRegister = false
     @State private var showGIF = false
     @State private var showLogoutAlert = false
+    @State private var selectedTab = 0  // 添加选中标签页的状态
     
     var body: some View {
         ZStack {
-            // 背景
             if authManager.isLoggedIn {
-                ZStack {
-                    VStack(spacing: 0) {
-                        ZStack {
-                            // 静态图片
-                            Image("background")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 400)
-                                .opacity(showGIF ? 0 : 1)
-                            
-                            // GIF 图片
-                            GIFView(gifName: "background")
-                                .frame(width: 400)
-                                .opacity(showGIF ? 1 : 0)
-                        }
-                        .animation(.easeInOut(duration: 0.001), value: showGIF)
-                        
-                        Button(action: {
-                            withAnimation {
-                                showGIF.toggle()
-                            }
-                        }) {
-                            Image("start_btn")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 160, height: 100)
-                        }
-                        .offset(y: -70)
-                    }
-                    .padding()
-                    .background(Color.white.opacity(0.8))
-                    .cornerRadius(10)
-                    
-                    // 登出按钮放在右上角
+                TabView(selection: $selectedTab) {
+                    // Notes Tab
                     VStack {
-                        HStack {
-                            Spacer()
-                            Button(action: {
-                                showLogoutAlert = true
-                            }) {
-                                Image(systemName: "rectangle.portrait.and.arrow.right")
-                                    .font(.system(size: 20))
-                                    .foregroundColor(.gray)
-                                    .padding(12)
-                                    .background(Color(red: 0.96, green: 0.93, blue: 0.82))
-                                    .clipShape(Circle())
-                                    .shadow(radius: 2)
-                            }
-                            .alert("确认登出", isPresented: $showLogoutAlert) {
-                                Button("取消", role: .cancel) { }
-                                Button("确认", role: .destructive) {
-                                    authManager.signOut()
+                        ZStack {
+                            VStack(spacing: 0) {
+                                ZStack {
+                                    // 静态图片
+                                    Image("background")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 400)
+                                        .opacity(showGIF ? 0 : 1)
+                                    
+                                    // GIF 图片
+                                    GIFView(gifName: "background")
+                                        .frame(width: 400)
+                                        .opacity(showGIF ? 1 : 0)
                                 }
-                            } message: {
-                                Text("确定要退出登录吗？")
+                                .animation(.easeInOut(duration: 0.001), value: showGIF)
+                                
+                                Button(action: {
+                                    withAnimation {
+                                        showGIF.toggle()
+                                    }
+                                }) {
+                                    Image("start_btn")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 160, height: 100)
+                                }
+                                .offset(y: -70)
                             }
-                            .padding(.top, 10)
-                            .padding(.trailing, 35)
+                            .padding()
+                            .background(Color.white.opacity(0.8))
+                            .cornerRadius(10)
+                            
+                            // 登出按钮放在右上角
+                            VStack {
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        showLogoutAlert = true
+                                    }) {
+                                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(.white)
+                                            .padding(12)
+                                            .background(Color(red: 0.96, green: 0.93, blue: 0.88))
+                                            .clipShape(Circle())
+                                            .shadow(radius: 2)
+                                    }
+                                    .alert("确认登出", isPresented: $showLogoutAlert) {
+                                        Button("取消", role: .cancel) { }
+                                        Button("确认", role: .destructive) {
+                                            authManager.signOut()
+                                        }
+                                    } message: {
+                                        Text("确定要退出登录吗？")
+                                    }
+                                    .padding(.top, 10)
+                                    .padding(.trailing, 25)
+                                }
+                                Spacer()
+                            }
                         }
-                        Spacer()
                     }
+                    
+                 
+                    .tabItem {
+                        Image("notes")
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                        Text("笔记")
+                    }
+                    .tag(1)
+                    
+                    // Coffee Bean Tab
+//                    
+//                    // Rank Tab
+                    VStack {
+                        Text("排行榜")
+                            .font(.title)
+                    }
+                    .tabItem {
+                        Image("recipe")
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                        Text("排行榜")
+                    }
+                    .tag(2)
+                    
+                    VStack {
+                        Text("咖啡豆")
+                            .font(.title)
+                    }
+                    .tabItem {
+                        Image("coffee_bean")
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                        Text("咖啡豆")
+                    }
+                    .tag(1)
+                    
+                    VStack {
+                        Text("rank")
+                            .font(.title)
+                    }
+                    .tabItem {
+                        Image("rank")
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                        Text("排行榜")
+                    }
+                    .tag(3)
                 }
+                .accentColor(Color(red: 0.96, green: 0.93, blue: 0.88))  // TabView 选中时的颜色
             } else {
                 // 未登录状态显示的内容
                 VStack(spacing: 15) {

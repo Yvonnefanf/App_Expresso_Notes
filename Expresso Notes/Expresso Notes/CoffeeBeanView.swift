@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct HomeView: View {
+struct CoffeeBeanView: View {
     var body: some View {
         NavigationView {
             Text("🏠 Welcome Home!")

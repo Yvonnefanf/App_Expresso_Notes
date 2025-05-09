@@ -76,11 +76,14 @@ extension Notification.Name {
 
 struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
+    @StateObject private var brewRecordStore = BrewRecordStore()
+    @State private var showMainTabs = false
     @State private var showLogin = false
     @State private var showRegister = false
     @State private var showGIF = false
     @State private var showLogoutAlert = false
-    @State private var selectedTab = 0  // 添加选中标签页的状态
+    @State private var selectedTab = -1  // 添加选中标签页的状态
+    @State private var showBrewRecord = false
     
     // 添加通知观察者
     @State private var notificationSubscription: AnyCancellable?
@@ -109,8 +112,10 @@ struct ContentView: View {
                                 .animation(.easeInOut(duration: 0.001), value: showGIF)
                                 
                                 Button(action: {
-                                    withAnimation {
-                                        showGIF.toggle()
+//                                    showGIF = true
+                                    // 延迟1.5秒后显示记录表单
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
+                                        showBrewRecord = true
                                     }
                                 }) {
                                     Image("start_btn")
@@ -155,6 +160,7 @@ struct ContentView: View {
                         }
                     }
                     
+                    NotesView()
                     .tabItem {
                         Image("notes")
                             .resizable()
@@ -162,6 +168,8 @@ struct ContentView: View {
                         Text("笔记")
                     }
                     .tag(0)
+                    .environmentObject(brewRecordStore)
+                    
                     
                     // Coffee Bean Tab
                     CoffeeBeanView()
@@ -174,6 +182,7 @@ struct ContentView: View {
                         .tag(1)
                     
                     // Rank Tab
+                   
                     VStack {
                         Text("排行榜")
                             .font(.title)
@@ -199,6 +208,13 @@ struct ContentView: View {
                 }
                 .onDisappear {
                     notificationSubscription?.cancel()
+                }
+                .sheet(isPresented: $showBrewRecord, onDismiss: {
+                    // 当表单关闭后，重置GIF状态
+                    showGIF = false
+                }) {
+                    BrewRecordView()
+                        .environmentObject(brewRecordStore)
                 }
             } else {
                 // 未登录状态显示的内容

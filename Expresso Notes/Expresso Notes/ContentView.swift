@@ -8,6 +8,7 @@
 import SwiftUI
 import FirebaseCore
 import WebKit
+import Combine
 
 // GIF 视图组件
 struct GIFView: UIViewRepresentable {
@@ -68,6 +69,11 @@ struct GIFView: UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 }
 
+// 定义通知名称
+extension Notification.Name {
+    static let switchToTab = Notification.Name("switchToTab")
+}
+
 struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
     @State private var showLogin = false
@@ -75,6 +81,9 @@ struct ContentView: View {
     @State private var showGIF = false
     @State private var showLogoutAlert = false
     @State private var selectedTab = 0  // 添加选中标签页的状态
+    
+    // 添加通知观察者
+    @State private var notificationSubscription: AnyCancellable?
     
     var body: some View {
         ZStack {
@@ -146,44 +155,27 @@ struct ContentView: View {
                         }
                     }
                     
-                 
                     .tabItem {
                         Image("notes")
                             .resizable()
                             .frame(width: 20, height: 20)
                         Text("笔记")
                     }
-                    .tag(1)
+                    .tag(0)
                     
                     // Coffee Bean Tab
-//                    
-//                    // Rank Tab
+                    CoffeeBeanView()
+                        .tabItem {
+                            Image("coffee_bean")
+                                .resizable()
+                                .frame(width: 20, height: 20)
+                            Text("咖啡豆")
+                        }
+                        .tag(1)
+                    
+                    // Rank Tab
                     VStack {
                         Text("排行榜")
-                            .font(.title)
-                    }
-                    .tabItem {
-                        Image("recipe")
-                            .resizable()
-                            .frame(width: 20, height: 20)
-                        Text("排行榜")
-                    }
-                    .tag(2)
-                    
-                    VStack {
-                        Text("咖啡豆")
-                            .font(.title)
-                    }
-                    .tabItem {
-                        Image("coffee_bean")
-                            .resizable()
-                            .frame(width: 20, height: 20)
-                        Text("咖啡豆")
-                    }
-                    .tag(1)
-                    
-                    VStack {
-                        Text("rank")
                             .font(.title)
                     }
                     .tabItem {
@@ -192,9 +184,22 @@ struct ContentView: View {
                             .frame(width: 20, height: 20)
                         Text("排行榜")
                     }
-                    .tag(3)
+                    .tag(2)
                 }
                 .accentColor(Color(red: 0.96, green: 0.93, blue: 0.88))  // TabView 选中时的颜色
+                .onAppear {
+                    // 设置通知监听
+                    notificationSubscription = NotificationCenter.default
+                        .publisher(for: .switchToTab)
+                        .sink { notification in
+                            if let tabIndex = notification.object as? Int {
+                                selectedTab = tabIndex
+                            }
+                        }
+                }
+                .onDisappear {
+                    notificationSubscription?.cancel()
+                }
             } else {
                 // 未登录状态显示的内容
                 VStack(spacing: 15) {

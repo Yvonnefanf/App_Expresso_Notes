@@ -19,6 +19,102 @@ struct BrewRecordDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
                 
+                // 咖啡豆信息
+                if let bean = record.coffeeBean {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("咖啡豆")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 15) {
+                            // 烘焙度图片
+                            Image(getRoastImage(for: bean.roastLevel))
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 60, height: 60)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(bean.name)
+                                    .font(.title3)
+                                    .fontWeight(.medium)
+                                
+                                Text(bean.brand)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                
+                                Text(bean.roastLevel)
+                                    .font(.caption)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                                    .background(Color(UIColor.systemGray5))
+                                    .cornerRadius(4)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 16)
+                    .background(Color(UIColor.systemBackground))
+                    .cornerRadius(10)
+                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    .padding(.horizontal)
+                }
+                
+                // 评分
+                if let rating = record.rating {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("评分")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        HStack {
+                            // 评分条
+                            ZStack(alignment: .leading) {
+                                Rectangle()
+                                    .frame(height: 12)
+                                    .foregroundColor(Color(UIColor.systemGray5))
+                                    .cornerRadius(6)
+                                
+                                Rectangle()
+                                    .frame(width: CGFloat(rating / 10.0) * UIScreen.main.bounds.width * 0.8, height: 12)
+                                    .foregroundColor(ratingColor(for: rating))
+                                    .cornerRadius(6)
+                            }
+                            
+                            Text(String(format: "%.1f", rating))
+                                .font(.headline)
+                                .foregroundColor(ratingColor(for: rating))
+                                .padding(.leading, 8)
+                        }
+                        
+                        Text(systemRatingDescription(for: rating))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 2)
+                        
+                        // 个人评价
+                        if let description = record.ratingDescription, !description.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("个人评价")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 4)
+                                
+                                Text(description)
+                                    .font(.body)
+                                    .padding(12)
+                                    .background(Color(UIColor.systemGray6))
+                                    .cornerRadius(8)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 16)
+                    .background(Color(UIColor.systemBackground))
+                    .cornerRadius(10)
+                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    .padding(.horizontal)
+                }
+                
                 // 分割线
                 Divider()
                 
@@ -54,6 +150,54 @@ struct BrewRecordDetailView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy年MM月dd日 HH:mm"
         return formatter.string(from: date)
+    }
+    
+    private func systemRatingDescription(for rating: Double) -> String {
+        switch rating {
+        case 0..<3:
+            return "不满意，存在明显问题"
+        case 3..<5:
+            return "一般，有改进空间"
+        case 5..<7:
+            return "不错，基本满意"
+        case 7..<9:
+            return "很好，令人满意"
+        case 9...10:
+            return "极佳，完美萃取"
+        default:
+            return ""
+        }
+    }
+    
+    private func ratingColor(for rating: Double) -> Color {
+        switch rating {
+        case 0..<3:
+            return .red
+        case 3..<5:
+            return .orange
+        case 5..<7:
+            return .yellow
+        case 7..<9:
+            return .green
+        case 9...10:
+            return .blue
+        default:
+            return .gray
+        }
+    }
+    
+    // 获取烘焙度对应的图片名称
+    private func getRoastImage(for roastLevel: String) -> String {
+        switch roastLevel {
+        case "浅焙":
+            return "qianhong"
+        case "中焙":
+            return "zhonghong"
+        case "深焙":
+            return "shenhong"
+        default:
+            return "zhonghong"
+        }
     }
 }
 

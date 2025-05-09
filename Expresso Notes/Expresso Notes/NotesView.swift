@@ -100,6 +100,24 @@ struct BrewRecordRow: View {
                     .cornerRadius(10)
             }
             
+            if let bean = record.coffeeBean {
+                HStack(spacing: 8) {
+                    Image(getRoastImage(for: bean.roastLevel))
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                    
+                    Text(bean.name)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Text(bean.brand)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
+            
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("萃取时间: \(record.extractionTime)秒")
@@ -114,6 +132,23 @@ struct BrewRecordRow: View {
                 Spacer()
                 
                 HStack(spacing: 6) {
+                    if let rating = record.rating {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .frame(width: 10, height: 10)
+                                .foregroundColor(ratingColor(for: rating))
+                            
+                            Text(String(format: "%.1f", rating))
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(ratingColor(for: rating))
+                        }
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color(UIColor.systemGray6))
+                        .cornerRadius(10)
+                        .padding(.trailing, 4)
+                    }
+                    
                     Image(systemName: "thermometer")
                         .foregroundColor(.orange)
                         .font(.caption)
@@ -131,6 +166,20 @@ struct BrewRecordRow: View {
                         .foregroundColor(.secondary)
                 }
             }
+            
+            if let description = record.ratingDescription, !description.isEmpty {
+                HStack {
+                    Image(systemName: "text.quote")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                    
+                    Text(description.count > 40 ? description.prefix(40) + "..." : description)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .lineLimit(1)
+                }
+                .padding(.top, 4)
+            }
         }
         .padding()
         .background(Color(UIColor.secondarySystemGroupedBackground))
@@ -141,6 +190,36 @@ struct BrewRecordRow: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "MM-dd HH:mm"
         return formatter.string(from: date)
+    }
+    
+    private func ratingColor(for rating: Double) -> Color {
+        switch rating {
+        case 0..<3:
+            return .red
+        case 3..<5:
+            return .orange
+        case 5..<7:
+            return .yellow
+        case 7..<9:
+            return .green
+        case 9...10:
+            return .blue
+        default:
+            return .gray
+        }
+    }
+    
+    private func getRoastImage(for roastLevel: String) -> String {
+        switch roastLevel {
+        case "浅焙":
+            return "qianhong"
+        case "中焙":
+            return "zhonghong"
+        case "深焙":
+            return "shenhong"
+        default:
+            return "zhonghong"
+        }
     }
 }
 

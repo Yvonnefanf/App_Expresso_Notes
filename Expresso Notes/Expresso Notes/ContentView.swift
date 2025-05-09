@@ -77,6 +77,7 @@ extension Notification.Name {
 struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var brewRecordStore = BrewRecordStore()
+    @StateObject private var beanManager = CoffeeBeanManager()
     @State private var showMainTabs = false
     @State private var showLogin = false
     @State private var showRegister = false
@@ -180,18 +181,19 @@ struct ContentView: View {
                             Text("咖啡豆")
                         }
                         .tag(1)
+                        .environmentObject(beanManager)
                     
                     // Rank Tab
                    
                     VStack {
-                        Text("排行榜")
+                        Text("菜谱")
                             .font(.title)
                     }
                     .tabItem {
-                        Image("rank")
+                        Image("recipe")
                             .resizable()
                             .frame(width: 20, height: 20)
-                        Text("排行榜")
+                        Text("菜谱")
                     }
                     .tag(2)
                 }
@@ -215,6 +217,7 @@ struct ContentView: View {
                 }) {
                     BrewRecordView()
                         .environmentObject(brewRecordStore)
+                        .environmentObject(beanManager)
                 }
             } else {
                 // 未登录状态显示的内容

@@ -3,12 +3,15 @@ import Foundation
 struct BrewRecord: Identifiable, Codable {
     var id = UUID()
     var date: Date
+    var coffeeBean: CoffeeBeanReference? // 添加咖啡豆引用
     var coffeeWeight: String
     var waterTemperature: Int
     var grindSize: Int
     var preInfusionTime: String
     var extractionTime: String
     var yieldAmount: String
+    var rating: Double? // 修改为小数评分
+    var ratingDescription: String? // 添加评分描述
     
     // 计算比例
     var ratio: String {
@@ -16,6 +19,21 @@ struct BrewRecord: Identifiable, Codable {
             return String(format: "1:%.1f", yield / coffee)
         }
         return "N/A"
+    }
+}
+
+// 用于在记录中存储咖啡豆引用的结构体
+struct CoffeeBeanReference: Codable, Identifiable {
+    var id: UUID
+    var name: String
+    var brand: String
+    var roastLevel: String
+    
+    init(from coffeeBean: CoffeeBean) {
+        self.id = coffeeBean.id
+        self.name = coffeeBean.name
+        self.brand = coffeeBean.brand
+        self.roastLevel = coffeeBean.roastLevel.rawValue
     }
 }
 

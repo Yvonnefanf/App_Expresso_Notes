@@ -18,72 +18,95 @@ struct BrewRecordView: View {
     @State private var tempRecord: BrewRecord? = nil
     @State private var showCoffeeBeanPicker = false
     
+    // 鹅黄色背景颜色
+    private let backgroundColor = Color(red: 253/255, green: 242/255, blue: 206/255)
+    // 输入框背景颜色
+    private let inputBackgroundColor = Color(red: 253/255, green: 246/255, blue: 227/255)
+    // 按钮颜色
+    private let buttonColor = Color(red: 249/255, green: 213/255, blue: 107/255)
+    // 文本颜色
+    private let textColor = Color(red: 49/255, green: 54/255, blue: 56/255)
+    
     var body: some View {
         NavigationView {
             ZStack {
-                Form {
-                    // 咖啡豆选择器
-                    Section(header: Text("咖啡豆选择")) {
-                        coffeeBeanSelector
-                    }
-                    
-                    Section(header: Text("咖啡参数")) {
-                        HStack {
-                            Text("咖啡粉重量(g)")
-                            TextField("输入重量", text: $coffeeWeight)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                        }
-                        
-                        VStack(alignment: .leading) {
+                backgroundColor.edgesIgnoringSafeArea(.all)
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // 咖啡豆选择
+                        VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Text("水温")
-                                Spacer()
-                                Text("\(Int(waterTemperature))°C")
+                                Text("咖啡豆选择")
+                                    .font(.headline)
+                                    .foregroundColor(textColor)
+                                Text("*")
+                                    .foregroundColor(.red)
                             }
-                            Slider(value: $waterTemperature, in: 80...100, step: 1)
+                            
+                            // 咖啡豆选择器
+                            coffeeBeanSelector
+                        }
+                        .padding(.top, 16)
+                        
+                        // 咖啡参数
+                        VStack(alignment: .leading, spacing: 24) {
+                            // 咖啡粉重量
+                            parameterInputField(title: "咖啡粉重量(g)", binding: $coffeeWeight, placeholder: "输入重量", required: true)
+                            
+                            // 水温
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("水温")
+                                        .font(.headline)
+                                        .foregroundColor(textColor)
+                                    Text("*")
+                                        .foregroundColor(.red)
+                                }
+                                
+                                HStack {
+                                    Slider(value: $waterTemperature, in: 80...100, step: 1)
+                                        .accentColor(buttonColor)
+                                    
+                                    Text("\(Int(waterTemperature))°C")
+                                        .foregroundColor(textColor)
+                                        .frame(width: 50)
+                                }
+                            }
+                            
+                            // 研磨度
+                            parameterInputField(title: "研磨度", binding: $grindSize, placeholder: "输入研磨度", required: true)
+                            
+                            // 预浸泡时间
+                            parameterInputField(title: "预浸泡时间(秒)", binding: $preInfusionTime, placeholder: "可选", required: false)
+                            
+                            // 萃取时间
+                            parameterInputField(title: "萃取时间(秒)", binding: $extractionTime, placeholder: "输入时间", required: true)
+                            
+                            // 出液量
+                            parameterInputField(title: "出液量(g)", binding: $yieldAmount, placeholder: "输入出液量", required: true)
                         }
                         
-                        HStack {
-                            Text("研磨度")
-                            TextField("输入研磨度", text: $grindSize)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
+                        // 保存按钮
+                        Button(action: prepareRecord) {
+                            Text("保存记录")
+                                .font(.headline)
+                                .foregroundColor(textColor)
+                                .frame(width: 160)
+                                .padding(.vertical, 14)
+                                .background(
+                                    coffeeWeight.isEmpty || extractionTime.isEmpty || yieldAmount.isEmpty || grindSize.isEmpty 
+                                    ? buttonColor.opacity(0.5) 
+                                    : buttonColor
+                                )
+                                .cornerRadius(25)
+                                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
                         }
-                        
-                        HStack {
-                            Text("预浸泡时间(秒)")
-                            TextField("可选", text: $preInfusionTime)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                        }
-                        
-                        HStack {
-                            Text("萃取时间(秒)")
-                            TextField("输入时间", text: $extractionTime)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                        }
-                        
-                        HStack {
-                            Text("出液量(g)")
-                            TextField("输入出液量", text: $yieldAmount)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                        }
+                        .disabled(coffeeWeight.isEmpty || extractionTime.isEmpty || yieldAmount.isEmpty || grindSize.isEmpty)
+                        .padding(.vertical, 20)
                     }
-                    
-                    Button(action: prepareRecord) {
-                        Text("保存记录")
-                            .frame(maxWidth: .infinity)
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(Color(red: 0.6, green: 0.4, blue: 0.2))
-                            .cornerRadius(10)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.vertical)
-                    .disabled(coffeeWeight.isEmpty || extractionTime.isEmpty || yieldAmount.isEmpty || grindSize.isEmpty)
+                    .padding(20)
+                    .frame(maxWidth: .infinity)
                 }
                 .navigationTitle("记录萃取参数")
                 .navigationBarItems(trailing: Button("关闭") {
@@ -109,25 +132,42 @@ struct BrewRecordView: View {
         }
     }
     
+    // 参数输入字段
+    private func parameterInputField(title: String, binding: Binding<String>, placeholder: String, required: Bool) -> some View {
+        HStack(alignment: .center) {
+            // 标签
+            HStack(spacing: 2) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(textColor)
+                
+                if required {
+                    Text("*")
+                        .foregroundColor(.red)
+                }
+            }
+            .frame(width: 120, alignment: .leading)
+            
+            Spacer()
+            
+            // 输入框
+            TextField(placeholder, text: binding)
+                .keyboardType(.decimalPad)
+                .padding(12)
+                .background(inputBackgroundColor)
+                .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+                .frame(maxWidth: .infinity)
+        }
+    }
+    
     // 咖啡豆选择器
     private var coffeeBeanSelector: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // 选择器标题和按钮
-            HStack {
-                Text("选择咖啡豆")
-                    .font(.headline)
-                
-                Spacer()
-                
-                Button(action: {
-                    showCoffeeBeanPicker = true
-                }) {
-                    Text(selectedCoffeeBean == nil ? "选择" : "更换")
-                        .foregroundColor(.blue)
-                }
-            }
-            
-            // 显示已选择的咖啡豆
+            // 显示已选择的咖啡豆或选择按钮
             if let bean = selectedCoffeeBean {
                 HStack(spacing: 12) {
                     // 烘焙度图片
@@ -140,13 +180,23 @@ struct BrewRecordView: View {
                         Text(bean.name)
                             .font(.subheadline)
                             .fontWeight(.medium)
+                            .foregroundColor(textColor)
                         
                         Text(bean.brand)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(textColor.opacity(0.7))
                     }
                     
                     Spacer()
+                    
+                    // 更换按钮
+                    Button(action: {
+                        showCoffeeBeanPicker = true
+                    }) {
+                        Text("更换")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                    }
                     
                     // 移除按钮
                     Button(action: {
@@ -156,15 +206,32 @@ struct BrewRecordView: View {
                             .foregroundColor(.gray)
                     }
                 }
-                .padding(.vertical, 6)
-                .padding(.horizontal, 10)
-                .background(Color(UIColor.systemGray6))
+                .padding()
+                .background(inputBackgroundColor)
                 .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
             } else {
-                Text("未选择咖啡豆")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 6)
+                Button(action: {
+                    showCoffeeBeanPicker = true
+                }) {
+                    HStack {
+                        Text("选择咖啡豆")
+                            .foregroundColor(textColor.opacity(0.7))
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
+                    }
+                    .padding()
+                    .background(inputBackgroundColor)
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    )
+                }
             }
         }
     }
@@ -215,12 +282,16 @@ struct BrewRecordView: View {
     }
 }
 
-// 咖啡豆选择器视图
+// 咖啡豆选择器视图样式也更新
 struct CoffeeBeanPickerView: View {
     @Binding var selectedBean: CoffeeBean?
     @ObservedObject var beanManager: CoffeeBeanManager
     @Environment(\.presentationMode) var presentationMode
     @State private var searchText = ""
+    
+    // 定义相同的颜色方案
+    private let backgroundColor = Color(red: 253/255, green: 242/255, blue: 206/255)
+    private let textColor = Color(red: 49/255, green: 54/255, blue: 56/255)
     
     var filteredBeans: [CoffeeBean] {
         if searchText.isEmpty {
@@ -235,41 +306,48 @@ struct CoffeeBeanPickerView: View {
     
     var body: some View {
         NavigationView {
-            List {
-                ForEach(filteredBeans) { bean in
-                    Button(action: {
-                        selectedBean = bean
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        HStack {
-                            Image(getRoastImage(for: bean.roastLevel))
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 40, height: 40)
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(bean.name)
-                                    .fontWeight(.medium)
+            ZStack {
+                backgroundColor.edgesIgnoringSafeArea(.all)
+                
+                List {
+                    ForEach(filteredBeans) { bean in
+                        Button(action: {
+                            selectedBean = bean
+                            presentationMode.wrappedValue.dismiss()
+                        }) {
+                            HStack {
+                                Image(getRoastImage(for: bean.roastLevel))
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 40, height: 40)
                                 
-                                Text(bean.brand)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(bean.name)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(textColor)
+                                    
+                                    Text(bean.brand)
+                                        .font(.caption)
+                                        .foregroundColor(textColor.opacity(0.7))
+                                }
+                                
+                                Spacer()
+                                
+                                if selectedBean?.id == bean.id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
                             }
-                            
-                            Spacer()
-                            
-                            if selectedBean?.id == bean.id {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
-                            }
+                            .contentShape(Rectangle())
+                            .padding(.vertical, 8)
                         }
-                        .contentShape(Rectangle())
+                        .buttonStyle(PlainButtonStyle())
+                        .listRowBackground(Color.clear)
                     }
-                    .buttonStyle(PlainButtonStyle())
                 }
+                .listStyle(PlainListStyle())
+                .searchable(text: $searchText, prompt: "搜索咖啡豆")
             }
-            .listStyle(InsetGroupedListStyle())
-            .searchable(text: $searchText, prompt: "搜索咖啡豆")
             .navigationTitle("选择咖啡豆")
             .navigationBarItems(trailing: Button("取消") {
                 presentationMode.wrappedValue.dismiss()

@@ -115,7 +115,7 @@ struct ContentView: View {
                                                 .frame(width: 400)
                                                 .opacity(showGIF ? 1 : 0)
                                         }.offset(y: 40)
-                                        .animation(.easeInOut(duration: 0.001), value: showGIF)
+                                            .animation(.easeInOut(duration: 0.001), value: showGIF)
                                         
                                         Button(action: {
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
@@ -170,28 +170,29 @@ struct ContentView: View {
                             EmptyView()
                         }
                     }
-                    
-                    HStack {
-                        CustomTabButton(image: "coffeenote", title: "笔记", isSelected: selectedTab == 1) {
-                            selectedTab = 1
+                    if selectedTab == 0{
+                        HStack {
+                            CustomTabButton(image: "coffeenote", title: "笔记", isSelected: selectedTab == 1) {
+                                selectedTab = 1
+                            }
+                            CustomTabButton(image: "coffeebean", title: "豆仓", isSelected: selectedTab == 2) {
+                                selectedTab = 2
+                            }
+                            CustomTabButton(image: "recipe", title: "菜谱", isSelected: selectedTab == 3) {
+                                selectedTab = 3
+                            }
+                            CustomTabButton(image: "rank", title: "排行", isSelected: selectedTab == 4) {
+                                selectedTab = 4
+                            }
                         }
-                        CustomTabButton(image: "coffeebean", title: "豆仓", isSelected: selectedTab == 2) {
-                            selectedTab = 2
-                        }
-                        CustomTabButton(image: "recipe", title: "菜谱", isSelected: selectedTab == 3) {
-                            selectedTab = 3
-                        }
-                        CustomTabButton(image: "rank", title: "排行", isSelected: selectedTab == 4) {
-                            selectedTab = 4
-                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(
+                            Color.white
+                                .ignoresSafeArea(edges: .bottom)
+                        )
+                        .frame(maxWidth: .infinity) // 整行撑满宽度
                     }
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-                    .background(
-                        Color.white
-                            .ignoresSafeArea(edges: .bottom)
-                    )
-                    .frame(maxWidth: .infinity) // 整行撑满宽度
                 }
                 .onAppear {
                     // 设置通知监听

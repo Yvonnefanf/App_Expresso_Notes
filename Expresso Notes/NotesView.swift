@@ -9,8 +9,13 @@ import SwiftUI
 
 struct NotesView: View {
     @EnvironmentObject var brewRecordStore: BrewRecordStore
+    @Environment(\.presentationMode) private var presentationMode
     @State private var searchText = ""
     
+    // 你可以根据需要替换成你项目中实际的颜色
+    private let textColor: Color = .primary
+    
+    // 筛选逻辑保持不变
     var filteredRecords: [BrewRecord] {
         if searchText.isEmpty {
             return brewRecordStore.records
@@ -43,8 +48,29 @@ struct NotesView: View {
                     .searchable(text: $searchText, prompt: "搜索记录")
                 }
             }
-            .navigationTitle("咖啡笔记")
+            // 改用 inline 模式，并自定义 toolbar
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                // 中央标题
+                ToolbarItem(placement: .principal) {
+                    Text("咖啡笔记")
+                        .font(.custom("Umeboshi", size: 24))
+                }
+                // 右侧回到首页按钮
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        // 发送通知让 ContentView 切换到第 0 个 tab
+                        NotificationCenter.default.post(name: .switchToTab, object: 0)
+                        // 关闭当前视图
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Image(systemName: "house.fill")
+                            .foregroundColor(textColor)
+                    }
+                }
+            }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
     
     private var emptyStateView: some View {

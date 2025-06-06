@@ -11,9 +11,10 @@ import FirebaseCore
 @main
 struct Expresso_NotesApp: App {
     @StateObject private var authManager = AuthManager()
+    @StateObject private var brewRecordStore = BrewRecordStore()
+    @StateObject private var beanManager = CoffeeBeanManager()
     
     init() {
-        print("应用初始化")
         FirebaseApp.configure()
         print("Firebase 配置完成")
     }
@@ -23,6 +24,8 @@ struct Expresso_NotesApp: App {
             NavigationStack {
                 ContentView()
                     .environmentObject(authManager)
+                    .environmentObject(brewRecordStore)
+                    .environmentObject(beanManager)   // ← 把同一个 beanManager 放到环境里
             }
         }
     }

@@ -61,7 +61,7 @@ class CoffeeBeanManager: ObservableObject {
 }
 
 struct CoffeeBeanView: View {
-    @StateObject private var beanManager = CoffeeBeanManager()
+    @EnvironmentObject var beanManager: CoffeeBeanManager
     @State private var showingAddSheet = false
     @Environment(\.presentationMode) var presentationMode
     
@@ -135,7 +135,9 @@ struct CoffeeBeanView: View {
                     }
             
             .sheet(isPresented: $showingAddSheet) {
-                AddCoffeeBeanView(beanManager: beanManager)
+                // 这里传入的 beanManager 也改成环境注入
+                AddCoffeeBeanView()
+                    .environmentObject(beanManager)
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
@@ -219,7 +221,7 @@ struct CoffeeBeanCard: View {
 
 // 添加新咖啡豆的表单
 struct AddCoffeeBeanView: View {
-    @ObservedObject var beanManager: CoffeeBeanManager
+    @EnvironmentObject var beanManager: CoffeeBeanManager
     @Environment(\.presentationMode) var presentationMode
     
     @State private var name = ""

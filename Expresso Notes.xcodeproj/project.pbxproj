@@ -35,30 +35,9 @@
 		A49AE5502D92B8AD0001D7B7 /* Expresso NotesUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Expresso NotesUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		A46B37372DD71196005F7F91 /* Exceptions for "Expresso Notes" folder in "Expresso NotesTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				umeboshi_.ttf,
-			);
-			target = A49AE5452D92B8AD0001D7B7 /* Expresso NotesTests */;
-		};
-		A46B37382DD71196005F7F91 /* Exceptions for "Expresso Notes" folder in "Expresso NotesUITests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				umeboshi_.ttf,
-			);
-			target = A49AE54F2D92B8AD0001D7B7 /* Expresso NotesUITests */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A49AE5382D92B8AC0001D7B7 /* Expresso Notes */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				A46B37372DD71196005F7F91 /* Exceptions for "Expresso Notes" folder in "Expresso NotesTests" target */,
-				A46B37382DD71196005F7F91 /* Exceptions for "Expresso Notes" folder in "Expresso NotesUITests" target */,
-			);
 			path = "Expresso Notes";
 			sourceTree = "<group>";
 		};

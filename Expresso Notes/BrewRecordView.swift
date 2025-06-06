@@ -128,8 +128,9 @@ struct BrewRecordView: View {
                     }
                 )
                 .sheet(isPresented: $showCoffeeBeanPicker) {
-                    CoffeeBeanPickerView(selectedBean: $selectedCoffeeBean, beanManager: beanManager)
-                }
+                    CoffeeBeanPickerView(selectedBean: $selectedCoffeeBean)
+                         .environmentObject(beanManager)
+                  }
                 
                 // 评分弹窗覆盖层
                 if showRatingView {
@@ -181,75 +182,31 @@ struct BrewRecordView: View {
     
     // 咖啡豆选择器
     private var coffeeBeanSelector: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // 显示已选择的咖啡豆或选择按钮
-            if let bean = selectedCoffeeBean {
-                HStack(spacing: 12) {
-                    // 烘焙度图片
-                    Image(getRoastImage(for: bean.roastLevel))
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 40, height: 40)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(bean.name)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(textColor)
-                        
-                        Text(bean.brand)
-                            .font(.caption)
-                            .foregroundColor(textColor.opacity(0.7))
-                    }
-                    
-                    Spacer()
-                    
-                    // 更换按钮
+            VStack(alignment: .leading, spacing: 10) {
+                if let bean = selectedCoffeeBean {
+                    // 已选豆子视图
+                } else {
                     Button(action: {
                         showCoffeeBeanPicker = true
                     }) {
-                        Text("更换")
-                            .font(.subheadline)
-                            .foregroundColor(.blue)
+                        HStack {
+                            Text("选择咖啡豆")
+                                .foregroundColor(textColor.opacity(0.7))
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .background(Color(red: 253/255, green: 246/255, blue: 227/255))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        )
                     }
-                    
-                    // 移除按钮
-                    Button(action: {
-                        selectedCoffeeBean = nil
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.gray)
-                    }
-                }
-                .padding()
-                .background(inputBackgroundColor)
-                .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                )
-            } else {
-                Button(action: {
-                    showCoffeeBeanPicker = true
-                }) {
-                    HStack {
-                        Text("选择咖啡豆")
-                            .foregroundColor(textColor.opacity(0.7))
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.gray)
-                    }
-                    .padding()
-                    .background(inputBackgroundColor)
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                    )
                 }
             }
         }
-    }
     
     // 准备记录并显示评分弹窗
     func prepareRecord() {
@@ -300,7 +257,7 @@ struct BrewRecordView: View {
 // 咖啡豆选择器视图样式也更新
 struct CoffeeBeanPickerView: View {
     @Binding var selectedBean: CoffeeBean?
-    @ObservedObject var beanManager: CoffeeBeanManager
+    @EnvironmentObject var beanManager: CoffeeBeanManager
     @Environment(\.presentationMode) var presentationMode
     @State private var searchText = ""
     

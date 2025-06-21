@@ -487,4 +487,5 @@ struct FlowLayout: Layout {
 
 #Preview {
     CoffeeBeanView()
+        .environmentObject(CoffeeBeanManager())
 }

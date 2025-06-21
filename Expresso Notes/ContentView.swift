@@ -76,8 +76,8 @@ extension Notification.Name {
 
 struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
-    @StateObject private var brewRecordStore = BrewRecordStore()
-    @StateObject private var beanManager = CoffeeBeanManager()
+    @EnvironmentObject var brewRecordStore: BrewRecordStore
+    @EnvironmentObject var beanManager: CoffeeBeanManager
     @State private var showMainTabs = false
     @State private var showLogin = false
     @State private var showRegister = false
@@ -121,7 +121,7 @@ struct ContentView: View {
                                                 showBrewRecord = true
                                             }
                                         }) {
-                                            Image("start_btn")
+                                            Image("start_button")
                                                 .resizable()
                                                 .scaledToFit()
                                                 .frame(width: 160, height: 100)
@@ -304,6 +304,8 @@ struct CustomTabButton: View {
 #Preview {
     ContentView()
         .environmentObject(AuthManager())
+        .environmentObject(BrewRecordStore())
+        .environmentObject(CoffeeBeanManager())
 }
 
 

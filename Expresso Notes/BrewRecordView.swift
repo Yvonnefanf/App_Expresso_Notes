@@ -21,7 +21,7 @@ struct BrewRecordView: View {
     @State private var yieldAmount: String = ""
     @State private var rating: Double = 7.0
     @State private var ratingDescription: String = ""
-    @State private var showRatingView = false
+    @State private var showRatingPopup = false
     @State private var tempRecord: BrewRecord? = nil
     @State private var showCoffeeBeanPicker = false
     
@@ -158,22 +158,133 @@ struct BrewRecordView: View {
                   }
                 
                 // 评分弹窗覆盖层
-                if showRatingView {
+                if showRatingPopup {
                     Color.black.opacity(0.3)
                         .edgesIgnoringSafeArea(.all)
                         .onTapGesture {} // 防止点击背景关闭
                     
-                    RatingView(rating: $rating, description: $ratingDescription, onSave: {
-                        saveRecordWithRating()
-                    })
-                    .transition(.scale)
+                    ratingPopupView
+                        .transition(.scale)
                 }
             }
             .onTapGesture {
                 hideKeyboard()
             }
-            .animation(.easeInOut, value: showRatingView)
+            .animation(.easeInOut, value: showRatingPopup)
         }
+    }
+    
+    // 评分弹窗视图
+    private var ratingPopupView: some View {
+        VStack(spacing: 24) {
+            Text("给你的咖啡打分")
+                .font(.custom("平方江南体", size: 20))
+                .fontWeight(.bold)
+                .foregroundColor(textColor)
+            
+            Text("这次的萃取效果如何？")
+                .font(.custom("平方江南体", size: 16))
+                .foregroundColor(textColor.opacity(0.7))
+            
+            // 评分滑块
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("评分")
+                        .font(.custom("平方江南体", size: 18))
+                        .foregroundColor(textColor)
+                    Spacer()
+                    Text(String(format: "%.1f", rating))
+                        .font(.custom("平方江南体", size: 18))
+                        .foregroundColor(.orange)
+                }
+                
+                Slider(value: $rating, in: 0...10, step: 0.1)
+                    .accentColor(.orange)
+                
+                // 评分标尺
+                HStack {
+                    Text("0")
+                        .font(.custom("平方江南体", size: 14))
+                        .foregroundColor(textColor.opacity(0.6))
+                    Spacer()
+                    Text("5")
+                        .font(.custom("平方江南体", size: 14))
+                        .foregroundColor(textColor.opacity(0.6))
+                    Spacer()
+                    Text("10")
+                        .font(.custom("平方江南体", size: 14))
+                        .foregroundColor(textColor.opacity(0.6))
+                }
+                .padding(.horizontal, 4)
+            }
+            .padding(.vertical, 8)
+            
+            // 显示评分描述
+            Text(systemRatingDescription(for: rating))
+                .font(.custom("平方江南体", size: 14))
+                .foregroundColor(textColor.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .padding(.bottom, 10)
+            
+            // 个人评价输入
+            VStack(alignment: .leading, spacing: 8) {
+                Text("描述")
+                    .font(.custom("平方江南体", size: 18))
+                    .foregroundColor(textColor)
+                
+                ZStack(alignment: .topLeading) {
+                    if ratingDescription.isEmpty {
+                        Text("描述一下这次萃取的风味、口感等...")
+                            .font(.custom("平方江南体", size: 14))
+                            .foregroundColor(textColor.opacity(0.5))
+                            .padding(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
+                    }
+                    
+                    TextEditor(text: $ratingDescription)
+                        .font(.custom("平方江南体", size: 14))
+                        .frame(minHeight: 100)
+                        .padding(4)
+                        .background(Color.white)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        )
+                }
+            }
+            .padding(.vertical, 8)
+            
+            Divider()
+                .padding(.vertical, 8)
+            
+            // 按钮
+            HStack(spacing: 16) {
+                Button("取消") {
+                    showRatingPopup = false
+                }
+                .frame(width: 120)
+                .padding()
+                .foregroundColor(textColor)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(textColor, lineWidth: 1)
+                )
+                
+                Button("完成") {
+                    saveRecordWithRating()
+                }
+                .frame(width: 120)
+                .padding()
+                .foregroundColor(.white)
+                .background(buttonColor)
+                .cornerRadius(8)
+            }
+        }
+        .padding()
+        .background(backgroundColor)
+        .cornerRadius(16)
+        .shadow(radius: 10)
+        .padding(.horizontal, 24)
     }
     
     private func hideKeyboard() {
@@ -315,7 +426,7 @@ struct BrewRecordView: View {
         )
         
         // 显示评分弹窗
-        showRatingView = true
+        showRatingPopup = true
     }
     
     // 保存带评分的记录
@@ -340,6 +451,24 @@ struct BrewRecordView: View {
             return "zhonghong"
         case .dark:
             return "shenhong"
+        }
+    }
+    
+    // 评分描述函数
+    func systemRatingDescription(for rating: Double) -> String {
+        switch rating {
+        case 0..<3:
+            return "不满意，存在明显问题"
+        case 3..<5:
+            return "一般，有改进空间"
+        case 5..<7:
+            return "不错，基本满意"
+        case 7..<9:
+            return "很好，令人满意"
+        case 9...10:
+            return "极佳，完美萃取"
+        default:
+            return ""
         }
     }
 }

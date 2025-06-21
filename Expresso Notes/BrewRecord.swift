@@ -4,7 +4,6 @@ import FirebaseFirestore
 
 
 struct BrewRecord: Identifiable, Codable {
-    @DocumentID var documentID: String?    // Firestore 文档 ID（可选）
     var id = UUID()
     var date: Date
     var coffeeBean: CoffeeBeanReference? // 添加咖啡豆引用
@@ -44,31 +43,11 @@ struct CoffeeBeanReference: Codable, Identifiable {
 class BrewRecordStore: ObservableObject {
     @Published var records: [BrewRecord] = []
     
-//    private let saveKey = "savedBrewRecords"
-    private var saveKey: String? {
-        guard let uid = Auth.auth().currentUser?.uid else {
-            return nil
-        }
-        return "savedBrewRecords_\(uid)"
-    }
-    // 监听 Auth 状态
-    private var authHandle: AuthStateDidChangeListenerHandle?
+    // 使用固定的key，不依赖用户登录状态
+    private let saveKey = "savedBrewRecords"
     
     init() {
-        // 先 load 一次
         loadRecords()
-        
-        // 然后监听登录/登出
-        authHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
-                // 当用户切换或登出/登录时，刷新一遍本地记录
-            self?.loadRecords()
-        }
-    }
-    
-    deinit {
-        if let handle = authHandle {
-            Auth.auth().removeStateDidChangeListener(handle)
-        }
     }
     
     func addRecord(_ record: BrewRecord) {
@@ -77,51 +56,53 @@ class BrewRecordStore: ObservableObject {
     }
     
     func deleteRecord(at indexSet: IndexSet) {
-        guard saveKey != nil else { return }
-        
         records.remove(atOffsets: indexSet)
         saveRecords()
     }
     
-//    private func saveRecords() {
-//        if let encoded = try? JSONEncoder().encode(records) {
-//            UserDefaults.standard.set(encoded, forKey: saveKey)
-//        }
-//    }
+    // 测试方法：添加测试记录
+    func addTestRecord() {
+        let testRecord = BrewRecord(
+            date: Date(),
+            coffeeWeight: "18",
+            waterTemperature: 92,
+            grindSize: 4,
+            preInfusionTime: "30",
+            extractionTime: "120",
+            yieldAmount: "36"
+        )
+        addRecord(testRecord)
+    }
+    
+    // 测试方法：清空所有记录
+    func clearAllRecords() {
+        records.removeAll()
+        UserDefaults.standard.removeObject(forKey: saveKey)
+    }
     
     private func saveRecords() {
-        guard let key = saveKey else { return }
-        if let encoded = try? JSONEncoder().encode(records) {
-            UserDefaults.standard.set(encoded, forKey: key)
+        do {
+            let encoded = try JSONEncoder().encode(records)
+            UserDefaults.standard.set(encoded, forKey: saveKey)
+            print("✅ 成功保存 \(records.count) 条记录")
+        } catch {
+            print("❌ 保存失败: \(error)")
         }
     }
     
     private func loadRecords() {
-        // 先清空当前数组
-        records = []
-        
-        guard let key = saveKey else {
-            // 如果用户未登录，records 保持空数组
-            return
-        }
-        
-        if let savedData = UserDefaults.standard.data(forKey: key),
-           let decoded = try? JSONDecoder().decode([BrewRecord].self, from: savedData) {
-            records = decoded
-        } else {
-            // 如果没有任何保存数据或解码失败，依然保持空数组
+        do {
+            if let savedData = UserDefaults.standard.data(forKey: saveKey) {
+                let decoded = try JSONDecoder().decode([BrewRecord].self, from: savedData)
+                records = decoded
+                print("✅ 成功加载 \(records.count) 条记录")
+            } else {
+                records = []
+                print("ℹ️ 没有找到保存的数据，初始化为空数组")
+            }
+        } catch {
             records = []
+            print("❌ 加载失败: \(error)")
         }
     }
-
-//    private func loadRecords() {
-//        if let savedRecords = UserDefaults.standard.data(forKey: saveKey) {
-//            if let decodedRecords = try? JSONDecoder().decode([BrewRecord].self, from: savedRecords) {
-//                records = decodedRecords
-//                return
-//            }
-//        }
-//        
-//        records = [] // 如果没有保存的记录或解码失败，创建一个空数组
-//    }
 } 

@@ -68,6 +68,19 @@ struct NotesView: View {
                             .foregroundColor(textColor)
                     }
                 }
+                // ToolbarItem(placement: .navigationBarLeading) {
+                //     HStack {
+                //         Button("添加测试") {
+                //             brewRecordStore.addTestRecord()
+                //         }
+                //         .foregroundColor(.blue)
+                        
+                //         Button("清空") {
+                //             brewRecordStore.clearAllRecords()
+                //         }
+                //         .foregroundColor(.red)
+                //     }
+                // }
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())

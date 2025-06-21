@@ -24,6 +24,7 @@ struct CoffeeBean: Identifiable, Codable {
         case medium = "中焙"
         case dark = "深焙"
     }
+    
 }
 
 // 咖啡豆管理器 - 处理数据存储和加载
@@ -67,6 +68,8 @@ struct CoffeeBeanView: View {
     
     private let backgroundColor = Color(red: 253/255, green: 242/255, blue: 206/255)
     private let textColor = Color(red: 49/255, green: 54/255, blue: 56/255)
+    let textColorForTitle = Color(red: 134/255, green: 86/255, blue: 56/255)
+    let iconColor = Color(red: 162/255, green: 160/255, blue: 154/255)
     
     // 定义网格布局
     private let gridItems = [
@@ -115,21 +118,35 @@ struct CoffeeBeanView: View {
                     .toolbar {
                         // 居中标题
                         ToolbarItem(placement: .principal) {
-                            Text("咖啡豆")
-                                  .font(.custom("Umeboshi", size: 24))
+                                  HStack(spacing: 8) {
+                                              Image("nobgbean")
+                                                  .resizable()
+                                                  .scaledToFit()
+                                                  .frame(width: 50, height: 50).padding(.top, 4)
 
-                        }
+                                              Text("咖啡豆")
+                                                  .font(.custom("Slideqiuhong", size: 30))
+                                                  .fontWeight(.bold).foregroundColor(textColorForTitle)
+                                          }
+                                          .foregroundColor(.primary)
+                                          .padding(.top, 16)
+                              }
 
                         // 右侧按钮
-                        ToolbarItem(placement: .navigationBarTrailing) {
+                        ToolbarItem(placement: .topBarLeading) {
                             Button(action: {
                                 // 先发送通知切换到主页
                                 NotificationCenter.default.post(name: .switchToTab, object: 0)
                                 // 关闭当前视图
                                 presentationMode.wrappedValue.dismiss()
                             }) {
-                                Image(systemName: "house.fill")
-                                    .foregroundColor(textColor)
+                                Image(systemName: "chevron.backward")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20) // 👈 控制大小
+                                    .fontWeight(.bold)
+                                    .foregroundColor(iconColor)
+                                    .padding(.top, 16)
                             }
                         }
                     }

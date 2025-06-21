@@ -175,12 +175,6 @@ struct ContentView: View {
                     }
                 }
                 .onAppear {
-//                    for family in UIFont.familyNames.sorted() {
-//                            print("字体家族: \(family)")
-//                            for name in UIFont.fontNames(forFamilyName: family) {
-//                                print("   字体名称: \(name)")
-//                            }
-//                        }
                     // 设置通知监听（原来的代码）
                     notificationSubscription = NotificationCenter.default
                         .publisher(for: .switchToTab)

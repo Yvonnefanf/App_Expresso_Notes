@@ -91,6 +91,8 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
+            Color.white // 白色背景
+                           .ignoresSafeArea() // 覆盖整个屏幕（包括 safe area）
             if authManager.isLoggedIn {
                 VStack {
                     // 主内容区域
@@ -140,10 +142,7 @@ struct ContentView: View {
                             CoffeeBeanView()
                                 .environmentObject(beanManager)
                         case 3:
-                            VStack {
-                                Text("菜谱")
-                                    .font(.title)
-                            }
+                            RecipeView(selectedTab: $selectedTab)
                         case 4:
                             UserView()
                                 .environmentObject(authManager)

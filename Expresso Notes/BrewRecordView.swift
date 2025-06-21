@@ -7,6 +7,7 @@ struct CustomTextFieldStyle: TextFieldStyle {
     }
 }
 
+
 struct BrewRecordView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var brewRecordStore: BrewRecordStore
@@ -15,7 +16,7 @@ struct BrewRecordView: View {
     @State private var selectedCoffeeBean: CoffeeBean?
     @State private var coffeeWeight: String = ""
     @State private var waterTemperature: Double = 92.0
-    @State private var grindSize: String = "4"
+    @State private var grindSize: String = ""
     @State private var preInfusionTime: String = ""
     @State private var extractionTime: String = ""
     @State private var yieldAmount: String = ""
@@ -26,27 +27,43 @@ struct BrewRecordView: View {
     @State private var showCoffeeBeanPicker = false
     
     // 鹅黄色背景颜色
-    private let backgroundColor = Color(red: 251/255, green: 242/255, blue: 225/255 ).opacity(0.6)
+    private let backgroundColor = Color(red: 255/255, green: 255/255, blue: 255/255 ).opacity(0.6)
+    // slider 背景颜色
+    private let sliderColor = Color(red: 251/255, green: 240/255, blue: 210/255 )
     // 输入框背景颜色
+    
     private let inputBackgroundColor = Color(red: 252/255, green: 239/255, blue: 201/255)
     // 按钮颜色
-    private let buttonColor = Color(red: 249/255, green: 213/255, blue: 107/255)
+    private let buttonColor = Color(red: 252/255, green: 240/255, blue: 201/255)
+    
+    private let disableColor = Color(red: 162/255, green: 160/255, blue: 154/255)
     // 文本颜色
     private let textColor = Color(red: 134/255, green: 86/255, blue: 56/255).opacity(0.8)
     let textColorForTitle = Color(red: 134/255, green: 86/255, blue: 56/255)
     let iconColor = Color(red: 162/255, green: 160/255, blue: 154/255)
     
+    // 定义错误高亮颜色
+    private let errorHighlightColor = Color(red: 255/255, green: 0/255, blue: 0/255)
+
+    // 新增：输入校验状态
+    @State private var showErrorCoffeeBean = false
+    @State private var showErrorCoffeeWeight = false
+    @State private var showErrorGrindSize = false
+    @State private var showErrorExtractionTime = false
+    @State private var showErrorYieldAmount = false
+    
     var body: some View {
         NavigationView {
+            
             ZStack {
-                backgroundColor.edgesIgnoringSafeArea(.all)
+                Color.white.ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: 24) {
                         // 咖啡豆选择
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Text("咖啡豆选择")
+                                Text("咖啡豆")
                                     .font(.custom("平方江南体", size: 18))
                                     .foregroundColor(textColor)
                                 Text("*")
@@ -56,17 +73,22 @@ struct BrewRecordView: View {
                             
                             // 咖啡豆选择器
                             coffeeBeanSelector
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(showErrorCoffeeBean ? errorHighlightColor : Color.gray.opacity(0.2))
+                                )
                         }
                         .padding(.top, 16)
                         
                         // 咖啡参数
                         VStack(alignment: .leading, spacing: 24) {
                             // 咖啡粉重量
-                            parameterInputField(title: "咖啡粉重量(g)", binding: $coffeeWeight, placeholder: "输入重量", required: true)
+                            parameterInputField(title: "咖啡粉重量(g)", binding: $coffeeWeight, placeholder: "输入重量", required: true, showError: showErrorCoffeeWeight)
                             
                             // 水温
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
+                            HStack(alignment: .center) {
+                                // 标签
+                                HStack(spacing: 2) {
                                     Text("水温")
                                         .font(.custom("平方江南体", size: 18))
                                         .foregroundColor(textColor)
@@ -74,47 +96,47 @@ struct BrewRecordView: View {
                                         .font(.custom("平方江南体", size: 18))
                                         .foregroundColor(.red)
                                 }
+                                .frame(width: 130, alignment: .leading)
                                 
+                                Spacer()
+                                
+                                // 滑块和数值
                                 HStack {
                                     Slider(value: $waterTemperature, in: 80...100, step: 1)
-                                        .accentColor(buttonColor)
+                                        .accentColor(sliderColor)
                                     
                                     Text("\(Int(waterTemperature))°C")
                                         .font(.custom("umeboshi", size: 16))
                                         .foregroundColor(textColor)
                                         .frame(width: 50)
                                 }
+                                .frame(maxWidth: .infinity)
                             }
                             
                             // 研磨度
-                            parameterInputField(title: "研磨度", binding: $grindSize, placeholder: "输入研磨度", required: true)
+                            parameterInputField(title: "研磨度", binding: $grindSize, placeholder: "输入研磨度", required: true, showError: showErrorGrindSize)
                             
                             // 预浸泡时间
-                            parameterInputField(title: "预浸泡时间(s)", binding: $preInfusionTime, placeholder: "输入时间(s)", required: false)
+                            parameterInputField(title: "预浸泡时间(s)", binding: $preInfusionTime, placeholder: "输入时间", required: false, showError: false)
                             
                             // 萃取时间
-                            parameterInputField(title: "萃取时间(s)", binding: $extractionTime, placeholder: "输入时间(s)", required: true)
+                            parameterInputField(title: "萃取时间(s)", binding: $extractionTime, placeholder: "输入时间", required: true, showError: showErrorExtractionTime)
                             
                             // 出液量
-                            parameterInputField(title: "出液量(g)", binding: $yieldAmount, placeholder: "输入出液量(g)", required: true)
+                            parameterInputField(title: "出液量(g)", binding: $yieldAmount, placeholder: "输入出液量", required: true, showError: showErrorYieldAmount)
                         }
                         
-                        // 保存按钮
-                        Button(action: prepareRecord) {
+                        // 保存按钮始终可点
+                        Button(action: validateAndPrepareRecord) {
                             Text("保存记录")
                                 .font(.custom("平方江南体", size: 18))
                                 .foregroundColor(textColor)
                                 .frame(width: 160)
                                 .padding(.vertical, 14)
-                                .background(
-                                    coffeeWeight.isEmpty || extractionTime.isEmpty || yieldAmount.isEmpty || grindSize.isEmpty 
-                                    ? buttonColor.opacity(0.5) 
-                                    : buttonColor
-                                )
+                                .background(buttonColor)
                                 .cornerRadius(25)
                                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
                         }
-                        .disabled(coffeeWeight.isEmpty || extractionTime.isEmpty || yieldAmount.isEmpty || grindSize.isEmpty)
                         .padding(.vertical, 20)
                     }
                     .padding(20)
@@ -176,112 +198,97 @@ struct BrewRecordView: View {
     
     // 评分弹窗视图
     private var ratingPopupView: some View {
-        VStack(spacing: 24) {
-            Text("给你的咖啡打分")
-                .font(.custom("平方江南体", size: 20))
-                .fontWeight(.bold)
-                .foregroundColor(textColor)
-            
-            Text("这次的萃取效果如何？")
-                .font(.custom("平方江南体", size: 16))
-                .foregroundColor(textColor.opacity(0.7))
-            
-            // 评分滑块
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("评分")
-                        .font(.custom("平方江南体", size: 18))
-                        .foregroundColor(textColor)
-                    Spacer()
-                    Text(String(format: "%.1f", rating))
-                        .font(.custom("平方江南体", size: 18))
-                        .foregroundColor(.orange)
-                }
+        ScrollView {
+            VStack(spacing: 24) {
+//                Text("给你的咖啡打分")
+//                    .font(.custom("平方江南体", size: 20))
+//                    .fontWeight(.bold)
+//                    .foregroundColor(textColor)
                 
-                Slider(value: $rating, in: 0...10, step: 0.1)
-                    .accentColor(.orange)
+                Text("本次萃取评价反馈")
+                    .font(.custom("平方江南体", size: 16))
+                    .foregroundColor(textColor.opacity(0.7))
                 
-                // 评分标尺
-                HStack {
-                    Text("0")
-                        .font(.custom("平方江南体", size: 14))
-                        .foregroundColor(textColor.opacity(0.6))
-                    Spacer()
-                    Text("5")
-                        .font(.custom("平方江南体", size: 14))
-                        .foregroundColor(textColor.opacity(0.6))
-                    Spacer()
-                    Text("10")
-                        .font(.custom("平方江南体", size: 14))
-                        .foregroundColor(textColor.opacity(0.6))
-                }
-                .padding(.horizontal, 4)
-            }
-            .padding(.vertical, 8)
-            
-            // 显示评分描述
-            Text(systemRatingDescription(for: rating))
-                .font(.custom("平方江南体", size: 14))
-                .foregroundColor(textColor.opacity(0.7))
-                .multilineTextAlignment(.center)
-                .padding(.bottom, 10)
-            
-            // 个人评价输入
-            VStack(alignment: .leading, spacing: 8) {
-                Text("描述")
-                    .font(.custom("平方江南体", size: 18))
-                    .foregroundColor(textColor)
-                
-                ZStack(alignment: .topLeading) {
-                    if ratingDescription.isEmpty {
-                        Text("描述一下这次萃取的风味、口感等...")
-                            .font(.custom("平方江南体", size: 14))
-                            .foregroundColor(textColor.opacity(0.5))
-                            .padding(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
+                // 评分滑块
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("评分")
+                            .font(.custom("平方江南体", size: 18))
+                            .foregroundColor(textColor)
+                        Spacer()
+                        Text(String(format: "%.1f", rating))
+                            .font(.custom("平方江南体", size: 18))
+                            .foregroundColor(textColor)
                     }
                     
-                    TextEditor(text: $ratingDescription)
-                        .font(.custom("平方江南体", size: 14))
-                        .frame(minHeight: 100)
-                        .padding(4)
-                        .background(Color.white)
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                        )
+                    Slider(value: $rating, in: 0...10, step: 0.1)
+                        .accentColor(sliderColor)
+                    
                 }
-            }
-            .padding(.vertical, 8)
-            
-            Divider()
-                .padding(.vertical, 8)
-            
-            // 按钮
-            HStack(spacing: 16) {
-                Button("取消") {
-                    showRatingPopup = false
-                }
-                .frame(width: 120)
-                .padding()
-                .foregroundColor(textColor)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(textColor, lineWidth: 1)
-                )
+                .padding(.vertical, 0)
                 
-                Button("完成") {
-                    saveRecordWithRating()
+                // 显示评分描述
+                Text(systemRatingDescription(for: rating))
+                    .font(.custom("平方江南体", size: 14))
+                    .foregroundColor(textColor.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 10)
+                
+                // 个人评价输入
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("反馈")
+                        .font(.custom("平方江南体", size: 18))
+                        .foregroundColor(textColor)
+                    
+                    ZStack(alignment: .topLeading) {
+                        if ratingDescription.isEmpty {
+                            Text("描述一下这次萃取的风味、口感等...")
+                                .font(.custom("平方江南体", size: 14))
+                                .foregroundColor(textColor.opacity(0.5))
+                                .padding(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
+                        }
+                        
+                        TextEditor(text: $ratingDescription)
+                            .font(.custom("平方江南体", size: 14))
+                            .frame(minHeight: 100)
+                            .padding(4)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                            )
+                    }
                 }
-                .frame(width: 120)
-                .padding()
-                .foregroundColor(.white)
-                .background(buttonColor)
-                .cornerRadius(8)
+                .padding(.vertical, 0)
+                
+                // 按钮
+                HStack(spacing: 16) {
+//                    Button("取消") {
+//                        showRatingPopup = false
+//                    }
+//                    .frame(width: 120)
+//                    .padding()
+//                    .foregroundColor(textColor)
+//                    .overlay(
+//                        RoundedRectangle(cornerRadius: 8)
+//                            .stroke(textColor, lineWidth: 1)
+//                    )
+                    
+                    Button("完成") {
+                        saveRecordWithRating()
+                    }
+                    .frame(width: 120)
+                    .padding()
+                    .foregroundColor(textColor)
+                    .background(buttonColor)
+                    .cornerRadius(8)
+                }
             }
+            .padding()
         }
-        .padding()
-        .background(backgroundColor)
+        .frame(maxHeight: UIScreen.main.bounds.height * 0.5)
+        .background(Color.white)
         .cornerRadius(16)
         .shadow(radius: 10)
         .padding(.horizontal, 24)
@@ -289,61 +296,6 @@ struct BrewRecordView: View {
     
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-    }
-    
-    // 参数输入字段
-    private func parameterInputField(title: String, binding: Binding<String>, placeholder: String, required: Bool) -> some View {
-        HStack(alignment: .center) {
-            // 标签
-            HStack(spacing: 2) {
-                if title.contains("(g)") {
-                    let parts = title.components(separatedBy: "(g)")
-                    Text(parts[0])
-                        .font(.custom("平方江南体", size: 18))
-                        .foregroundColor(textColor)
-                    Text("(g)")
-                        .font(.custom("umeboshi", size: 18))
-                        .foregroundColor(textColor)
-                } else if title.contains("(s)") {
-                    let parts = title.components(separatedBy: "(s)")
-                    Text(parts[0])
-                        .font(.custom("平方江南体", size: 18))
-                        .foregroundColor(textColor)
-                    Text("(s)")
-                        .font(.custom("umeboshi", size: 18))
-                        .foregroundColor(textColor)
-                }
-                else {
-                    Text(title)
-                        .font(.custom("平方江南体", size: 18))
-                        .foregroundColor(textColor)
-                }
-                
-                if required {
-                    Text("*")
-                        .font(.custom("平方江南体", size: 18))
-                        .foregroundColor(.red)
-                }
-            }
-            .frame(width: 130, alignment: .leading)
-            
-            Spacer()
-            
-            // 输入框
-            TextField(placeholder, text: binding)
-                .textFieldStyle(CustomTextFieldStyle())
-                .keyboardType(.decimalPad)
-                .padding(12)
-//                .background(inputBackgroundColor)
-                .foregroundColor(textColor) // 设置文本颜色
-                .background(Color.white) // 设置为白色背景
-                .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                )
-                .frame(maxWidth: .infinity)
-        }
     }
     
     // 咖啡豆选择器
@@ -361,14 +313,12 @@ struct BrewRecordView: View {
                                 .frame(width: 40, height: 40)
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(bean.name)
-                                    .font(.custom("平方江南体", size: 16))
-                                    .fontWeight(.medium)
-                                    .foregroundColor(textColor)
-                                
-                                Text(bean.brand)
-                                    .font(.custom("平方江南体", size: 14))
-                                    .foregroundColor(textColor.opacity(0.7))
+                                MixedFontText(content: bean.name)
+                                     .fontWeight(.medium)
+                                     .foregroundColor(textColor)
+                                 
+                                 MixedFontText(content: bean.brand)
+                                     .foregroundColor(textColor.opacity(0.7))
                             }
                             
                             Spacer()
@@ -392,7 +342,7 @@ struct BrewRecordView: View {
                         HStack {
                             Text("选择咖啡豆")
                                 .font(.custom("平方江南体", size: 16))
-                                .foregroundColor(textColor.opacity(0.7))
+                                .foregroundColor(disableColor.opacity(0.7))
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .foregroundColor(.gray)
@@ -408,6 +358,24 @@ struct BrewRecordView: View {
                 }
             }
         }
+    
+    // 校验并准备记录
+    func validateAndPrepareRecord() {
+        // 校验
+        showErrorCoffeeBean = (selectedCoffeeBean == nil)
+        showErrorCoffeeWeight = coffeeWeight.isEmpty
+        showErrorGrindSize = grindSize.isEmpty
+        showErrorExtractionTime = extractionTime.isEmpty
+        showErrorYieldAmount = yieldAmount.isEmpty
+        
+        let hasError = showErrorCoffeeBean || showErrorCoffeeWeight || showErrorGrindSize || showErrorExtractionTime || showErrorYieldAmount
+        if hasError {
+            // 有错误，不提交
+            return
+        }
+        // 无错误，正常提交
+        prepareRecord()
+    }
     
     // 准备记录并显示评分弹窗
     func prepareRecord() {
@@ -481,7 +449,7 @@ struct CoffeeBeanPickerView: View {
     @State private var searchText = ""
     
     // 定义相同的颜色方案
-    private let backgroundColor = Color(red: 251/255, green: 242/255, blue: 225/255 ).opacity(0.6)
+    private let backgroundColor = Color(red: 255/255, green: 255/255, blue: 255/255 )
     let textColor = Color(red: 134/255, green: 86/255, blue: 56/255).opacity(0.8)
     
     var filteredBeans: [CoffeeBean] {
@@ -498,8 +466,10 @@ struct CoffeeBeanPickerView: View {
     var body: some View {
         NavigationView {
             ZStack {
+//                Color.white.ignoresSafeArea() // 强制白色背景，不受夜间模式影响
                 backgroundColor.edgesIgnoringSafeArea(.all)
-//                
+                
+//
                 List {
                     ForEach(filteredBeans) { bean in
                         Button(action: {
@@ -513,13 +483,11 @@ struct CoffeeBeanPickerView: View {
                                     .frame(width: 40, height: 40)
                                 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(bean.name)
-                                        .font(.custom("平方江南体", size: 16))
+                                    MixedFontText(content: bean.name)
                                         .fontWeight(.medium)
                                         .foregroundColor(textColor)
                                     
-                                    Text(bean.brand)
-                                        .font(.custom("平方江南体", size: 14))
+                                    MixedFontText(content:bean.brand)
                                         .foregroundColor(textColor.opacity(0.7))
                                 }
                                 

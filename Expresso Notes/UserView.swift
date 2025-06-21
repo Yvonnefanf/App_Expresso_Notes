@@ -2,7 +2,6 @@ import SwiftUI
 import FirebaseAuth
 
 struct UserView: View {
-    @Environment(\.dismiss) var dismiss
     @EnvironmentObject var authManager: AuthManager
     @State private var username: String = ""
     @State private var showLogoutAlert = false
@@ -116,15 +115,12 @@ struct UserView: View {
             .navigationTitle("个人资料")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("关闭") {
-                        dismiss()
-                    }
-                }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("保存") {
-                        // TODO: Save all settings
-                        dismiss()
+                    Button(action: {
+                        // 发送通知让 ContentView 切换到第 0 个 tab
+                        NotificationCenter.default.post(name: .switchToTab, object: 0)
+                    }) {
+                        Image(systemName: "house.fill")
                     }
                 }
             }
@@ -132,7 +128,6 @@ struct UserView: View {
                 Button("取消", role: .cancel) { }
                 Button("确认", role: .destructive) {
                     authManager.signOut()
-                    dismiss()
                 }
             } message: {
                 Text("确定要退出登录吗？")

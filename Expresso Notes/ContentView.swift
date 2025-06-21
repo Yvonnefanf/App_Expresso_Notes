@@ -85,7 +85,6 @@ struct ContentView: View {
     @State private var showLogoutAlert = false
     @State private var selectedTab = 0
     @State private var showBrewRecord = false
-    @State private var showUserProfile = false
     
     // 添加通知观察者
     @State private var notificationSubscription: AnyCancellable?
@@ -132,27 +131,6 @@ struct ContentView: View {
                                     .padding()
                                     .background(Color.white.opacity(0.8))
                                     .cornerRadius(10)
-                                    
-                                    // 登出按钮放在右上角
-                                    VStack {
-                                        HStack {
-                                            Spacer()
-                                            Button(action: {
-                                                showUserProfile = true
-                                            }) {
-                                                Image(systemName: "person.circle")
-                                                    .font(.system(size: 40))
-                                                    .foregroundColor(.white)
-                                                    .padding(0)
-                                                    .background(Color(red: 0.96, green: 0.93, blue: 0.88))
-                                                    .clipShape(Circle())
-                                                    .shadow(radius: 2)
-                                            }
-                                            .padding(.top, 10)
-                                            .padding(.trailing, 25)
-                                        }
-                                        Spacer()
-                                    }
                                 }
                             }
                         case 1:
@@ -166,6 +144,9 @@ struct ContentView: View {
                                 Text("菜谱")
                                     .font(.title)
                             }
+                        case 4:
+                            UserView()
+                                .environmentObject(authManager)
                         default:
                             EmptyView()
                         }
@@ -181,7 +162,7 @@ struct ContentView: View {
                             CustomTabButton(image: "recipe", title: "菜谱", isSelected: selectedTab == 3) {
                                 selectedTab = 3
                             }
-                            CustomTabButton(image: "rank", title: "排行", isSelected: selectedTab == 4) {
+                            CustomTabButton(image: "profile", title: "我的", isSelected: selectedTab == 4) {
                                 selectedTab = 4
                             }
                         }
@@ -195,7 +176,13 @@ struct ContentView: View {
                     }
                 }
                 .onAppear {
-                    // 设置通知监听
+//                    for family in UIFont.familyNames.sorted() {
+//                            print("字体家族: \(family)")
+//                            for name in UIFont.fontNames(forFamilyName: family) {
+//                                print("   字体名称: \(name)")
+//                            }
+//                        }
+                    // 设置通知监听（原来的代码）
                     notificationSubscription = NotificationCenter.default
                         .publisher(for: .switchToTab)
                         .sink { notification in
@@ -222,10 +209,6 @@ struct ContentView: View {
                     BrewRecordView()
                         .environmentObject(brewRecordStore)
                         .environmentObject(beanManager)
-                }
-                .sheet(isPresented: $showUserProfile) {
-                    UserView()
-                        .environmentObject(authManager)
                 }
             } else {
                 // 未登录状态显示的内容
@@ -293,16 +276,27 @@ struct CustomTabButton: View {
                 Image(image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    // 根据选中状态微调尺寸
-                    .frame(width: 46,
-                           height: 46)
+                    .frame(width: 46, height: 46)
                 Text(title)
-                    .font(.system(size: isSelected ? 20 : 16))
+                    .font(.custom("平方江南体", size: isSelected ? 20 : 16))
+                    .fixedSize(horizontal: true, vertical: false)
+                    .onAppear {
+                        print("Button title: \(title), isSelected: \(isSelected)")
+                        // 打印所有可用字体
+                        for family in UIFont.familyNames {
+                            if family.contains("umeboshi") {
+                                print("Found umeboshi font family: \(family)")
+                                for name in UIFont.fontNames(forFamilyName: family) {
+                                    print("Font name: \(name)")
+                                }
+                            }
+                        }
+                    }
             }
             .foregroundColor(isSelected
                              ? Color(red: 0.96, green: 0.93, blue: 0.88)
                              : .gray)
-            .frame(maxWidth: .infinity) // 均等分布
+            .frame(maxWidth: .infinity)
         }
     }
 }

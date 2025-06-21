@@ -1,5 +1,12 @@
 import SwiftUI
 
+struct CustomTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .font(.custom("平方江南体", size: 16))
+    }
+}
+
 struct BrewRecordView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var brewRecordStore: BrewRecordStore
@@ -19,13 +26,15 @@ struct BrewRecordView: View {
     @State private var showCoffeeBeanPicker = false
     
     // 鹅黄色背景颜色
-    private let backgroundColor = Color(red: 253/255, green: 242/255, blue: 206/255)
+    private let backgroundColor = Color(red: 251/255, green: 242/255, blue: 225/255 ).opacity(0.6)
     // 输入框背景颜色
-    private let inputBackgroundColor = Color(red: 253/255, green: 246/255, blue: 227/255)
+    private let inputBackgroundColor = Color(red: 252/255, green: 239/255, blue: 201/255)
     // 按钮颜色
     private let buttonColor = Color(red: 249/255, green: 213/255, blue: 107/255)
     // 文本颜色
-    private let textColor = Color(red: 49/255, green: 54/255, blue: 56/255)
+    private let textColor = Color(red: 134/255, green: 86/255, blue: 56/255).opacity(0.8)
+    let textColorForTitle = Color(red: 134/255, green: 86/255, blue: 56/255)
+    let iconColor = Color(red: 162/255, green: 160/255, blue: 154/255)
     
     var body: some View {
         NavigationView {
@@ -38,9 +47,10 @@ struct BrewRecordView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Text("咖啡豆选择")
-                                    .font(.headline)
+                                    .font(.custom("平方江南体", size: 18))
                                     .foregroundColor(textColor)
                                 Text("*")
+                                    .font(.custom("平方江南体", size: 18))
                                     .foregroundColor(.red)
                             }
                             
@@ -58,9 +68,10 @@ struct BrewRecordView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
                                     Text("水温")
-                                        .font(.headline)
+                                        .font(.custom("平方江南体", size: 18))
                                         .foregroundColor(textColor)
                                     Text("*")
+                                        .font(.custom("平方江南体", size: 18))
                                         .foregroundColor(.red)
                                 }
                                 
@@ -69,6 +80,7 @@ struct BrewRecordView: View {
                                         .accentColor(buttonColor)
                                     
                                     Text("\(Int(waterTemperature))°C")
+                                        .font(.custom("umeboshi", size: 16))
                                         .foregroundColor(textColor)
                                         .frame(width: 50)
                                 }
@@ -78,19 +90,19 @@ struct BrewRecordView: View {
                             parameterInputField(title: "研磨度", binding: $grindSize, placeholder: "输入研磨度", required: true)
                             
                             // 预浸泡时间
-                            parameterInputField(title: "预浸泡时间(秒)", binding: $preInfusionTime, placeholder: "可选", required: false)
+                            parameterInputField(title: "预浸泡时间(s)", binding: $preInfusionTime, placeholder: "输入时间(s)", required: false)
                             
                             // 萃取时间
-                            parameterInputField(title: "萃取时间(秒)", binding: $extractionTime, placeholder: "输入时间", required: true)
+                            parameterInputField(title: "萃取时间(s)", binding: $extractionTime, placeholder: "输入时间(s)", required: true)
                             
                             // 出液量
-                            parameterInputField(title: "出液量(g)", binding: $yieldAmount, placeholder: "输入出液量", required: true)
+                            parameterInputField(title: "出液量(g)", binding: $yieldAmount, placeholder: "输入出液量(g)", required: true)
                         }
                         
                         // 保存按钮
                         Button(action: prepareRecord) {
                             Text("保存记录")
-                                .font(.headline)
+                                .font(.custom("平方江南体", size: 18))
                                 .foregroundColor(textColor)
                                 .frame(width: 160)
                                 .padding(.vertical, 14)
@@ -108,23 +120,36 @@ struct BrewRecordView: View {
                     .padding(20)
                     .frame(maxWidth: .infinity)
                 }
-                .navigationTitle("记录萃取参数")
+                .navigationBarTitleDisplayMode(.inline) // 设置为中间小标题模式
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        HStack(spacing: 8) {
+                                    Image("nobgbean") // 可替换为你想要的咖啡豆图标
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 50, height: 50).padding(.top, 4)
+
+                                    Text("参数记录")
+                                        .font(.custom("Slideqiuhong", size: 30))
+                                        .fontWeight(.bold).foregroundColor(textColorForTitle)
+                                }
+                                .foregroundColor(.primary)
+                                .padding(.top, 16)
+                    }
+                }
                 .navigationBarItems(
-//                    leading: Button(action: {
-//                        dismiss()
-//                        // 发送通知切换到主页
-//                        NotificationCenter.default.post(name: .switchToTab, object: 0)
-//                    }) {
-//                        Image(systemName: "house.fill")
-//                            .foregroundColor(textColor)
-//                    },
-                    trailing: Button(action: {
+                    leading: Button(action: {
                         dismiss()
                         // 发送通知切换到主页
                         NotificationCenter.default.post(name: .switchToTab, object: 0)
                     }) {
-                        Image(systemName: "house.fill")
-                            .foregroundColor(textColor)
+                        Image(systemName: "chevron.backward")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20) // 👈 控制大小
+                            .fontWeight(.bold)           // 👈 更粗（仅适用于某些系统图标）
+                            .foregroundColor(iconColor)
+                            .padding(.top, 16)
                     }
                 )
                 .sheet(isPresented: $showCoffeeBeanPicker) {
@@ -144,8 +169,15 @@ struct BrewRecordView: View {
                     .transition(.scale)
                 }
             }
+            .onTapGesture {
+                hideKeyboard()
+            }
             .animation(.easeInOut, value: showRatingView)
         }
+    }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
     // 参数输入字段
@@ -153,24 +185,47 @@ struct BrewRecordView: View {
         HStack(alignment: .center) {
             // 标签
             HStack(spacing: 2) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundColor(textColor)
+                if title.contains("(g)") {
+                    let parts = title.components(separatedBy: "(g)")
+                    Text(parts[0])
+                        .font(.custom("平方江南体", size: 18))
+                        .foregroundColor(textColor)
+                    Text("(g)")
+                        .font(.custom("umeboshi", size: 18))
+                        .foregroundColor(textColor)
+                } else if title.contains("(s)") {
+                    let parts = title.components(separatedBy: "(s)")
+                    Text(parts[0])
+                        .font(.custom("平方江南体", size: 18))
+                        .foregroundColor(textColor)
+                    Text("(s)")
+                        .font(.custom("umeboshi", size: 18))
+                        .foregroundColor(textColor)
+                }
+                else {
+                    Text(title)
+                        .font(.custom("平方江南体", size: 18))
+                        .foregroundColor(textColor)
+                }
                 
                 if required {
                     Text("*")
+                        .font(.custom("平方江南体", size: 18))
                         .foregroundColor(.red)
                 }
             }
-            .frame(width: 120, alignment: .leading)
+            .frame(width: 130, alignment: .leading)
             
             Spacer()
             
             // 输入框
             TextField(placeholder, text: binding)
+                .textFieldStyle(CustomTextFieldStyle())
                 .keyboardType(.decimalPad)
                 .padding(12)
-                .background(inputBackgroundColor)
+//                .background(inputBackgroundColor)
+                .foregroundColor(textColor) // 设置文本颜色
+                .background(Color.white) // 设置为白色背景
                 .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
@@ -185,19 +240,54 @@ struct BrewRecordView: View {
             VStack(alignment: .leading, spacing: 10) {
                 if let bean = selectedCoffeeBean {
                     // 已选豆子视图
+                    Button(action: {
+                        showCoffeeBeanPicker = true
+                    }) {
+                        HStack(spacing: 15) {
+                            Image(getRoastImage(for: bean.roastLevel))
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 40, height: 40)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(bean.name)
+                                    .font(.custom("平方江南体", size: 16))
+                                    .fontWeight(.medium)
+                                    .foregroundColor(textColor)
+                                
+                                Text(bean.brand)
+                                    .font(.custom("平方江南体", size: 14))
+                                    .foregroundColor(textColor.opacity(0.7))
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .background(Color.white)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 } else {
                     Button(action: {
                         showCoffeeBeanPicker = true
                     }) {
                         HStack {
                             Text("选择咖啡豆")
+                                .font(.custom("平方江南体", size: 16))
                                 .foregroundColor(textColor.opacity(0.7))
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .foregroundColor(.gray)
                         }
                         .padding()
-                        .background(Color(red: 253/255, green: 246/255, blue: 227/255))
+                        .background(Color(red: 255/255, green: 255/255, blue: 255/255))
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
@@ -254,7 +344,7 @@ struct BrewRecordView: View {
     }
 }
 
-// 咖啡豆选择器视图样式也更新
+// 咖啡豆选择器视图
 struct CoffeeBeanPickerView: View {
     @Binding var selectedBean: CoffeeBean?
     @EnvironmentObject var beanManager: CoffeeBeanManager
@@ -262,8 +352,8 @@ struct CoffeeBeanPickerView: View {
     @State private var searchText = ""
     
     // 定义相同的颜色方案
-    private let backgroundColor = Color(red: 253/255, green: 242/255, blue: 206/255)
-    private let textColor = Color(red: 49/255, green: 54/255, blue: 56/255)
+    private let backgroundColor = Color(red: 251/255, green: 242/255, blue: 225/255 ).opacity(0.6)
+    let textColor = Color(red: 134/255, green: 86/255, blue: 56/255).opacity(0.8)
     
     var filteredBeans: [CoffeeBean] {
         if searchText.isEmpty {
@@ -280,7 +370,7 @@ struct CoffeeBeanPickerView: View {
         NavigationView {
             ZStack {
                 backgroundColor.edgesIgnoringSafeArea(.all)
-                
+//                
                 List {
                     ForEach(filteredBeans) { bean in
                         Button(action: {
@@ -295,11 +385,12 @@ struct CoffeeBeanPickerView: View {
                                 
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(bean.name)
+                                        .font(.custom("平方江南体", size: 16))
                                         .fontWeight(.medium)
                                         .foregroundColor(textColor)
                                     
                                     Text(bean.brand)
-                                        .font(.caption)
+                                        .font(.custom("平方江南体", size: 14))
                                         .foregroundColor(textColor.opacity(0.7))
                                 }
                                 
@@ -320,10 +411,27 @@ struct CoffeeBeanPickerView: View {
                 .listStyle(PlainListStyle())
                 .searchable(text: $searchText, prompt: "搜索咖啡豆")
             }
-            .navigationTitle("选择咖啡豆")
-            .navigationBarItems(trailing: Button("取消") {
-                presentationMode.wrappedValue.dismiss()
-            })
+            
+            .navigationBarTitleDisplayMode(.inline) // 设置为中间小标题模式
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("咖啡豆")
+                        .font(.title2)
+                        .fontWeight(.semibold)// 可改为 .subheadline 或 .footnote 以更小
+                        .foregroundColor(.primary)
+                        .padding(.top, 6) // 控制下移距离
+                }
+            }
+////            .navigationTitle("选择咖啡豆")
+            .navigationBarItems(trailing:
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }) {
+                    Image(systemName: "xmark") // 或改成 "xmark" 看你想要哪种
+                        .foregroundColor(.primary)
+                        .imageScale(.medium)
+                }
+            )
         }
     }
     

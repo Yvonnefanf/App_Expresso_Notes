@@ -16,6 +16,12 @@ struct LoginView: View {
         _isRegistering = State(initialValue: isRegistering)
     }
     
+    // 检查表单是否有效
+    private var isFormValid: Bool {
+        !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !password.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 30) {
@@ -23,13 +29,8 @@ struct LoginView: View {
                 Image("logo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 120, height: 120)
+                    .frame(width: 220, height: 220)
                     .padding(.top, 40)
-                
-                // 标题
-                MixedFontText(content: isRegistering ? "注册" : "登录", fontSize: 28)
-                    .foregroundColor(Color.theme.textColorForTitle)
-                    .padding(.bottom, 10)
                 
                 VStack(spacing: 20) {
                     // 邮箱输入框
@@ -38,11 +39,13 @@ struct LoginView: View {
                             .foregroundColor(Color.theme.textColor)
                         
                         TextField("请输入邮箱", text: $email)
-                            .font(.custom("平方江南体", size: 16))
+//                            .font(.custom("平方江南体", size: 12))
+                            .font(.system(size: 12))
                             .padding(12)
                             .background(Color(UIColor.systemGray6))
                             .cornerRadius(8)
                             .autocapitalization(.none)
+                            .disableAutocorrection(true)
                             .onChange(of: email) { newValue in
                                 print("邮箱输入变化：\(newValue)")
                             }
@@ -54,25 +57,44 @@ struct LoginView: View {
                             .foregroundColor(Color.theme.textColor)
                         
                         SecureField("请输入密码", text: $password)
-                            .font(.custom("平方江南体", size: 16))
+//                            .font(.custom("平方江南体", size: 12))
+                            .font(.system(size: 12))
                             .padding(12)
                             .background(Color(UIColor.systemGray6))
                             .cornerRadius(8)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
                             .onChange(of: password) { newValue in
                                 print("密码输入变化：\(newValue)")
                             }
                     }
+                    // 注册和忘记密码链接 - 紧贴密码输入框，无间隙
+                    HStack {
+                        Button(action: {
+                            print("切换到注册模式")
+                            isRegistering.toggle()
+                        }) {
+                            Text("注册")
+                                .font(.system(size: 12))
+                                .foregroundColor(Color(UIColor.systemGray))
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            print("忘记密码")
+                            // TODO: 实现忘记密码功能
+                        }) {
+                            Text("忘记密码")
+                                .font(.system(size: 12))
+                                .foregroundColor(Color(UIColor.systemGray))
+                        }
+                    }
+                    .padding(.top, 8)
                 }
                 .padding(.horizontal, 20)
                 
-                // 错误信息
-                if !errorMessage.isEmpty {
-                    MixedFontText(content: errorMessage, fontSize: 14)
-                        .foregroundColor(.red)
-                        .padding(.horizontal, 20)
-                }
-                
-                // 登录按钮
+                // 登录按钮 - 变短
                 Button(action: {
                     print("点击了\(isRegistering ? "注册" : "登录")按钮")
                     if isRegistering {
@@ -83,52 +105,31 @@ struct LoginView: View {
                 }) {
                     MixedFontText(content: isRegistering ? "注册" : "登录", fontSize: 18)
                         .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 60)
                         .padding(.vertical, 14)
-                        .background(Color.theme.textColorForTitle)
+                        .background(isFormValid ? Color.theme.buttonColor : Color.theme.disableColor)
                         .cornerRadius(25)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 10)
+                .disabled(!isFormValid)
+                .opacity(isFormValid ? 1.0 : 0.2)
+                .padding(.top, 30)
                 
-                // 底部链接
-                HStack {
-                    Button(action: {
-                        print("切换到注册模式")
-                        isRegistering.toggle()
-                    }) {
-                        MixedFontText(content: "注册", fontSize: 14)
-                            .foregroundColor(Color.theme.disableColor)
-                    }
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        print("忘记密码")
-                        // TODO: 实现忘记密码功能
-                    }) {
-                        MixedFontText(content: "忘记密码", fontSize: 14)
-                            .foregroundColor(Color.theme.disableColor)
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 10)
+                // 错误信息 - 固定位置
+                Text(errorMessage.isEmpty ? " " : errorMessage)
+                    .font(.system(size: 14))
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
+                    .frame(minHeight: 20)
                 
                 Spacer()
             }
             .padding()
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        print("点击返回按钮")
-                        dismiss()
-                    }) {
-                        Text("返回")
-                            .foregroundColor(.gray)
-                    }
-                }
+            .onTapGesture {
+                // 点击屏幕收起键盘
+                hideKeyboard()
             }
+            .navigationBarTitleDisplayMode(.inline)
             .alert("邮箱验证", isPresented: $showVerificationAlert) {
                 Button("确定") {
                     dismiss()
@@ -140,6 +141,44 @@ struct LoginView: View {
         .navigationViewStyle(StackNavigationViewStyle())
     }
     
+    // 隐藏键盘的函数
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+    
+    // 根据Firebase错误码翻译错误信息为中文
+    private func translateFirebaseError(_ error: Error) -> String {
+        let nsError = error as NSError
+        if let errCode = AuthErrorCode(rawValue: nsError.code) {
+            switch errCode {
+            case .invalidEmail:
+                return "邮箱格式错误"
+            case .userDisabled:
+                return "该账户已被禁用"
+            case .userNotFound:
+                return "用户不存在"
+            case .wrongPassword:
+                return "密码错误"
+            case .tooManyRequests:
+                return "尝试次数过多，请稍后再试"
+            case .networkError:
+                return "网络错误，请检查网络连接"
+            case .emailAlreadyInUse:
+                return "该邮箱已被注册"
+            case .weakPassword:
+                return "密码强度不够，至少需要6位"
+            case .invalidCredential:
+                return "该邮箱未注册"
+            case .operationNotAllowed:
+                return "该操作不被允许"
+            default:
+                return "操作失败，请重试"
+            }
+        } else {
+            return "操作失败，请重试"
+        }
+    }
+    
     private func login() {
         print("开始登录流程")
         print("尝试登录，邮箱：\(email)")
@@ -147,7 +186,7 @@ struct LoginView: View {
             if let error = error {
                 print("登录失败：\(error.localizedDescription)")
                 print("错误详情：\(error)")
-                errorMessage = error.localizedDescription
+                errorMessage = translateFirebaseError(error)
             } else {
                 if let user = Auth.auth().currentUser {
                     if !user.isEmailVerified {
@@ -186,17 +225,8 @@ struct LoginView: View {
                 print("错误代码：\(error._code)")
                 print("错误域：\(error._domain)")
                 
-                // 根据错误类型显示不同的错误信息
-                switch error._code {
-                case AuthErrorCode.emailAlreadyInUse.rawValue:
-                    errorMessage = "该邮箱已被注册"
-                case AuthErrorCode.invalidEmail.rawValue:
-                    errorMessage = "邮箱格式不正确"
-                case AuthErrorCode.weakPassword.rawValue:
-                    errorMessage = "密码强度不够"
-                default:
-                    errorMessage = "注册失败：\(error.localizedDescription)"
-                }
+                // 使用Firebase错误码翻译显示中文错误信息
+                errorMessage = translateFirebaseError(error)
             } else if let user = result?.user {
                 print("注册成功，发送验证邮件")
                 

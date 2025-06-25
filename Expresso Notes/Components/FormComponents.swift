@@ -6,6 +6,14 @@
 //
 import SwiftUI
 
+// 自定义 TextField 样式，使用系统原生字体
+struct CustomTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .font(.system(size: 16)) // 使用系统原生字体和大小
+    }
+}
+
 func parameterInputField(
     title: String,
     binding: Binding<String>,
@@ -23,9 +31,7 @@ func parameterInputField(
             MixedFontText(content: title)
                 .foregroundColor(textColor)
             if required {
-                Text("*")
-                    .font(.custom("平方江南体", size: 18))
-                    .foregroundColor(.red)
+                MixedFontText(content: "*", color:.red)
             }
         }
         .frame(width: labelWidth, alignment: .leading)
@@ -35,8 +41,7 @@ func parameterInputField(
         // 输入框
         ZStack(alignment: .leading) {
             if binding.wrappedValue.isEmpty {
-                MixedFontText(content: placeholder,fontSize: 16)
-                    .foregroundColor(disableColor.opacity(0.7))
+                MixedFontText(content: placeholder,fontSize: 16, color: disableColor.opacity(0.7))
                     .padding(.leading, 12)
             }
 

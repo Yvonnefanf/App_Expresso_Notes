@@ -27,12 +27,34 @@ struct NotesView: View {
     // 根据选中的咖啡豆筛选记录
     var filteredRecords: [BrewRecord] {
         if let selectedBeanName = selectedBeanName {
-            return brewRecordStore.records.filter { record in
+            let beanRecords = brewRecordStore.records.filter { record in
                 record.coffeeBean?.name == selectedBeanName
             }
+            
+            // 如果筛选特定咖啡豆，将最佳记录置顶
+            if let bestRecord = getBestRecordForBean(beanRecords) {
+                var sortedRecords = beanRecords.filter { $0.id != bestRecord.id }
+                sortedRecords.sort { $0.date > $1.date } // 其他记录按日期倒序
+                return [bestRecord] + sortedRecords
+            } else {
+                return beanRecords.sorted { $0.date > $1.date }
+            }
         } else {
-            return brewRecordStore.records
+            return brewRecordStore.records.sorted { $0.date > $1.date }
         }
+    }
+    
+    // 获取指定记录列表中的最佳记录（评分最高的）
+    private func getBestRecordForBean(_ records: [BrewRecord]) -> BrewRecord? {
+        return records
+            .filter { $0.rating != nil } // 只考虑有评分的记录
+            .max { ($0.rating ?? 0) < ($1.rating ?? 0) }
+    }
+    
+    // 检查指定咖啡豆是否有最佳记录
+    private func hasBestRecord(for beanName: String) -> Bool {
+        let beanRecords = brewRecordStore.records.filter { $0.coffeeBean?.name == beanName }
+        return getBestRecordForBean(beanRecords) != nil
     }
     
     // 根据烘焙程度返回颜色
@@ -114,14 +136,23 @@ struct NotesView: View {
                         
                         // 记录列表
                         List {
-                            ForEach(filteredRecords) { record in
+                            ForEach(Array(filteredRecords.enumerated()), id: \.element.id) { index, record in
                                 NavigationLink(destination: BrewRecordDetailView(record: record)) {
-                                    BrewRecordRow(record: record)
+                                    BrewRecordRow(
+                                        record: record,
+                                        isBestRecord: selectedBeanName != nil && index == 0 && record.rating != nil
+                                    )
                                 }
                                 .listRowSeparator(.hidden)
                                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button(role: .destructive) {
+                                        deleteRecord(record)
+                                    } label: {
+                                        Label("删除", systemImage: "trash")
+                                    }
+                                }
                             }
-                            .onDelete(perform: deleteRecords)
                         }
                         .listStyle(.plain)
                     }
@@ -181,8 +212,8 @@ struct NotesView: View {
         .background(Color(UIColor.systemGroupedBackground))
     }
     
-    func deleteRecords(at offsets: IndexSet) {
-        brewRecordStore.deleteRecord(at: offsets)
+    func deleteRecord(_ record: BrewRecord) {
+        brewRecordStore.deleteRecord(record)
     }
     
     private func formatDate(_ date: Date) -> String {
@@ -194,6 +225,7 @@ struct NotesView: View {
 
 struct BrewRecordRow: View {
     let record: BrewRecord
+    let isBestRecord: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -202,6 +234,24 @@ struct BrewRecordRow: View {
                     .foregroundColor(Color.theme.disableColor)
                 
                 Spacer()
+                
+                // 最佳记录标识
+                if isBestRecord {
+                    HStack(spacing: 4) {
+                        Image(systemName: "star.fill")
+                            .foregroundColor(.yellow)
+                            .font(.caption)
+                        
+                        Text("最佳")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color.theme.textColor)
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(8)
+                }
                 
                 MixedFontText(content: "粉水比 \(record.ratio)", fontSize: 12)
                     .foregroundColor(Color.theme.textColor)
@@ -261,12 +311,14 @@ struct BrewRecordRow: View {
                         .foregroundColor(.secondary)
                 }
             }
-            
-
         }
         .padding()
-        .background(Color(UIColor.secondarySystemGroupedBackground))
+        .background(isBestRecord ? Color.theme.themeColor2.opacity(0.2) : Color(UIColor.secondarySystemGroupedBackground))
         .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isBestRecord ? Color.theme.themeColor : Color.clear, lineWidth: 2)
+        )
     }
     
     private func formatDate(_ date: Date) -> String {
@@ -311,15 +363,15 @@ struct NotesView_Previews: PreviewProvider {
         let store = BrewRecordStore()
         
         // 添加示例数据
-        store.addRecord(BrewRecord(
-            date: Date(),
-            coffeeWeight: "18",
-            waterTemperature: 92,
-            grindSize: 4,
-            preInfusionTime: "30",
-            extractionTime: "120",
-            yieldAmount: "36"
-        ))
+//        store.addRecord(BrewRecord(
+//            date: Date(),
+//            coffeeWeight: "18",
+//            waterTemperature: 92,
+//            grindSize: 4,
+//            preInfusionTime: "30",
+//            extractionTime: "120",
+//            yieldAmount: "36"
+//        ))
         
         return NotesView()
             .environmentObject(store)

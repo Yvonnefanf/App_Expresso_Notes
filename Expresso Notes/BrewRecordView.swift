@@ -1,13 +1,5 @@
 import SwiftUI
 
-struct CustomTextFieldStyle: TextFieldStyle {
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .font(.custom("平方江南体", size: 16))
-    }
-}
-
-
 struct BrewRecordView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var brewRecordStore: BrewRecordStore
@@ -26,26 +18,8 @@ struct BrewRecordView: View {
     @State private var tempRecord: BrewRecord? = nil
     @State private var showCoffeeBeanPicker = false
     
-    // 鹅黄色背景颜色
-    private let backgroundColor = Color(red: 255/255, green: 255/255, blue: 255/255 ).opacity(0.6)
-    // slider 背景颜色
-    private let sliderColor = Color(red: 251/255, green: 240/255, blue: 210/255 )
-    // 输入框背景颜色
-    
-    private let inputBackgroundColor = Color(red: 252/255, green: 239/255, blue: 201/255)
-    // 按钮颜色
-    private let buttonColor = Color(red: 252/255, green: 240/255, blue: 201/255)
-    
-    private let disableColor = Color(red: 162/255, green: 160/255, blue: 154/255)
-    // 文本颜色
-    private let textColor = Color(red: 134/255, green: 86/255, blue: 56/255).opacity(0.8)
-    let textColorForTitle = Color(red: 134/255, green: 86/255, blue: 56/255)
-    let iconColor = Color(red: 162/255, green: 160/255, blue: 154/255)
-    
-    // 定义错误高亮颜色
-    private let errorHighlightColor = Color(red: 255/255, green: 0/255, blue: 0/255)
-
-    // 新增：输入校验状态
+    // MARK: - 校验状态
+    // 输入校验状态
     @State private var showErrorCoffeeBean = false
     @State private var showErrorCoffeeWeight = false
     @State private var showErrorGrindSize = false
@@ -60,27 +34,23 @@ struct BrewRecordView: View {
                 
                 ScrollView {
                     VStack(spacing: 24) {
+                        // MARK: - 咖啡豆选择表单
                         // 咖啡豆选择
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Text("咖啡豆")
-                                    .font(.custom("平方江南体", size: 18))
-                                    .foregroundColor(textColor)
-                                Text("*")
-                                    .font(.custom("平方江南体", size: 18))
-                                    .foregroundColor(.red)
+                                MixedFontText(content: "咖啡豆",fontSize:18)
+                                MixedFontText(content: "*",color:.red)
                             }
                             
                             // 咖啡豆选择器
                             coffeeBeanSelector
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .stroke(showErrorCoffeeBean ? errorHighlightColor : Color.gray.opacity(0.2))
+                                        .stroke(showErrorCoffeeBean ? Color.theme.errorHighlightColor : Color.gray.opacity(0.2))
                                 )
                         }
                         .padding(.top, 16)
                         
-                        // 咖啡参数
                         VStack(alignment: .leading, spacing: 24) {
                             // 咖啡粉重量
                             parameterInputField(title: "咖啡粉重量(g)", binding: $coffeeWeight, placeholder: "输入重量", required: true, showError: showErrorCoffeeWeight)
@@ -89,12 +59,8 @@ struct BrewRecordView: View {
                             HStack(alignment: .center) {
                                 // 标签
                                 HStack(spacing: 2) {
-                                    Text("水温")
-                                        .font(.custom("平方江南体", size: 18))
-                                        .foregroundColor(textColor)
-                                    Text("*")
-                                        .font(.custom("平方江南体", size: 18))
-                                        .foregroundColor(.red)
+                                    MixedFontText(content: "水温",fontSize:18)
+                                    MixedFontText(content: "*",color:.red)
                                 }
                                 .frame(width: 130, alignment: .leading)
                                 
@@ -103,11 +69,11 @@ struct BrewRecordView: View {
                                 // 滑块和数值
                                 HStack {
                                     Slider(value: $waterTemperature, in: 80...100, step: 1)
-                                        .accentColor(sliderColor)
+                                        .accentColor(Color.theme.sliderColor)
                                     
                                     Text("\(Int(waterTemperature))°C")
                                         .font(.custom("umeboshi", size: 16))
-                                        .foregroundColor(textColor)
+                                        .foregroundColor(Color.theme.textColor)
                                         .frame(width: 50)
                                 }
                                 .frame(maxWidth: .infinity)
@@ -128,12 +94,10 @@ struct BrewRecordView: View {
                         
                         // 保存按钮始终可点
                         Button(action: validateAndPrepareRecord) {
-                            Text("保存记录")
-                                .font(.custom("平方江南体", size: 18))
-                                .foregroundColor(textColor)
+                            MixedFontText(content: "保存记录")
                                 .frame(width: 160)
                                 .padding(.vertical, 14)
-                                .background(buttonColor)
+                                .background(Color.theme.buttonColor)
                                 .cornerRadius(25)
                                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
                         }
@@ -153,7 +117,7 @@ struct BrewRecordView: View {
 
                                     Text("参数记录")
                                         .font(.custom("Slideqiuhong", size: 30))
-                                        .fontWeight(.bold).foregroundColor(textColorForTitle)
+                                        .fontWeight(.bold).foregroundColor(Color.theme.textColorForTitle)
                                 }
                                 .foregroundColor(.primary)
                                 .padding(.top, 16)
@@ -190,7 +154,7 @@ struct BrewRecordView: View {
         }
     }
     
-    // 评分弹窗视图
+    // MARK: - 评分
     private var ratingPopupView: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -201,22 +165,22 @@ struct BrewRecordView: View {
                 
                 Text("本次萃取评价反馈")
                     .font(.custom("平方江南体", size: 16))
-                    .foregroundColor(textColor.opacity(0.7))
+                    .foregroundColor(Color.theme.textColor.opacity(0.7))
                 
                 // 评分滑块
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("评分")
                             .font(.custom("平方江南体", size: 18))
-                            .foregroundColor(textColor)
+                            .foregroundColor(Color.theme.textColor)
                         Spacer()
                         Text(String(format: "%.1f", rating))
                             .font(.custom("平方江南体", size: 18))
-                            .foregroundColor(textColor)
+                            .foregroundColor(Color.theme.textColor)
                     }
                     
                     Slider(value: $rating, in: 0...10, step: 0.1)
-                        .accentColor(sliderColor)
+                        .accentColor(Color.theme.sliderColor)
                     
                 }
                 .padding(.vertical, 0)
@@ -224,7 +188,7 @@ struct BrewRecordView: View {
                 // 显示评分描述
                 Text(systemRatingDescription(for: rating))
                     .font(.custom("平方江南体", size: 14))
-                    .foregroundColor(textColor.opacity(0.7))
+                    .foregroundColor(Color.theme.textColor.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.bottom, 10)
                 
@@ -232,19 +196,19 @@ struct BrewRecordView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("反馈")
                         .font(.custom("平方江南体", size: 18))
-                        .foregroundColor(textColor)
+                        .foregroundColor(Color.theme.textColor)
                     
                     ZStack(alignment: .topLeading) {
                         if ratingDescription.isEmpty {
                             Text("描述一下这次萃取的风味、口感等...")
                                 .font(.custom("平方江南体", size: 14))
-                                .foregroundColor(textColor.opacity(0.5))
+                                .foregroundColor(Color.theme.textColor.opacity(0.5))
                                 .padding(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
                         }
                         
                         TextEditor(text: $ratingDescription)
                             .font(.custom("平方江南体", size: 14))
-                            .foregroundColor(textColor)
+                            .foregroundColor(Color.theme.textColor)
                             .frame(minHeight: 100)
                             .padding(4)
                             .background(Color.white)
@@ -259,16 +223,6 @@ struct BrewRecordView: View {
                 
                 // 按钮
                 HStack(spacing: 16) {
-//                    Button("取消") {
-//                        showRatingPopup = false
-//                    }
-//                    .frame(width: 120)
-//                    .padding()
-//                    .foregroundColor(textColor)
-//                    .overlay(
-//                        RoundedRectangle(cornerRadius: 8)
-//                            .stroke(textColor, lineWidth: 1)
-//                    )
                     
                     Button("完成") {
                         saveRecordWithRating()
@@ -276,8 +230,8 @@ struct BrewRecordView: View {
                     .font(.custom("平方江南体", size: 18))
                     .frame(width: 120)
                     .padding()
-                    .foregroundColor(textColor)
-                    .background(buttonColor)
+                    .foregroundColor(Color.theme.textColor)
+                    .background(Color.theme.buttonColor)
                     .cornerRadius(8)
                 }
             }
@@ -294,7 +248,7 @@ struct BrewRecordView: View {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
-    // 咖啡豆选择器
+ // MARK: - 咖啡豆选择器
     private var coffeeBeanSelector: some View {
             VStack(alignment: .leading, spacing: 10) {
                 if let bean = selectedCoffeeBean {
@@ -311,10 +265,9 @@ struct BrewRecordView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 MixedFontText(content: bean.name)
                                      .fontWeight(.medium)
-                                     .foregroundColor(textColor)
+                                     
                                  
-                                 MixedFontText(content: bean.brand)
-                                     .foregroundColor(textColor.opacity(0.7))
+                                MixedFontText(content: bean.brand).opacity(0.7)
                             }
                             
                             Spacer()
@@ -338,7 +291,7 @@ struct BrewRecordView: View {
                         HStack {
                             Text("选择咖啡豆")
                                 .font(.custom("平方江南体", size: 16))
-                                .foregroundColor(disableColor.opacity(0.7))
+                                .foregroundColor(Color.theme.disableColor.opacity(0.7))
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .foregroundColor(.gray)
@@ -444,8 +397,6 @@ struct CoffeeBeanPickerView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var searchText = ""
     
-    // 定义相同的颜色方案
-    private let backgroundColor = Color(red: 255/255, green: 255/255, blue: 255/255 )
     let textColor = Color(red: 134/255, green: 86/255, blue: 56/255).opacity(0.8)
     
     var filteredBeans: [CoffeeBean] {
@@ -463,7 +414,7 @@ struct CoffeeBeanPickerView: View {
         NavigationView {
             ZStack {
 //                Color.white.ignoresSafeArea() // 强制白色背景，不受夜间模式影响
-                backgroundColor.edgesIgnoringSafeArea(.all)
+                Color.theme.backgroundColor.edgesIgnoringSafeArea(.all)
                 
 //
                 List {
@@ -481,10 +432,10 @@ struct CoffeeBeanPickerView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     MixedFontText(content: bean.name)
                                         .fontWeight(.medium)
-                                        .foregroundColor(textColor)
+                                        .foregroundColor(Color.theme.textColor)
                                     
                                     MixedFontText(content:bean.brand)
-                                        .foregroundColor(textColor.opacity(0.7))
+                                        .foregroundColor(Color.theme.textColor.opacity(0.7))
                                 }
                                 
                                 Spacer()

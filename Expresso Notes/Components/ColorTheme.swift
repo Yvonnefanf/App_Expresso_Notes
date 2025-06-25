@@ -37,6 +37,10 @@ struct ColorTheme {
     /// 标题文本颜色
     static let textColorForTitle = Color(red: 134/255, green: 86/255, blue: 56/255)
     
+    // MARK: - error 颜色
+    
+    static let errorHighlightColor = Color(red: 255/255, green: 0/255, blue: 0/255)
+
     // MARK: - 图标颜色
     /// 图标颜色
     static let iconColor = Color(red: 162/255, green: 160/255, blue: 154/255)

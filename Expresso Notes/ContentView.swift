@@ -20,8 +20,6 @@ struct ContentView: View {
     @EnvironmentObject var brewRecordStore: BrewRecordStore
     @EnvironmentObject var beanManager: CoffeeBeanManager
     @State private var showMainTabs = false
-    @State private var showLogin = false
-    @State private var showRegister = false
     @State private var showLogoutAlert = false
     @State private var selectedTab = 0
     @State private var showBrewRecord = false
@@ -137,55 +135,10 @@ struct ContentView: View {
                         .environmentObject(beanManager)
                 }
             } else {
-                // 未登录状态显示的内容
-                VStack(spacing: 15) {
-                    Image(systemName: "cup.and.saucer.fill")
-                        .imageScale(.medium)
-                        .padding(.bottom, 10)
-                    
-                    Text("欢迎使用 Expresso Notes")
-                        .font(.title3)
-                        .bold()
-                    
-                    Button(action: {
-                        print("点击登录按钮")
-                        showLogin = true
-                    }) {
-                        Text("登录")
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(Color.blue)
-                            .cornerRadius(8)
-                    }
-                    .frame(width: 200)
-                    
-                    Button(action: {
-                        print("点击注册按钮")
-                        showRegister = true
-                    }) {
-                        Text("注册")
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(Color.green)
-                            .cornerRadius(8)
-                    }
-                    .frame(width: 200)
-                }
-                .padding()
-                .background(Color.white.opacity(0.8))
-                .cornerRadius(10)
-                .frame(width: 280)
+                // 未登录状态直接显示LoginView
+                LoginView()
+                    .environmentObject(authManager)
             }
-        }
-        .sheet(isPresented: $showLogin) {
-            LoginView()
-                .environmentObject(authManager)
-        }
-        .sheet(isPresented: $showRegister) {
-            LoginView(isRegistering: true)
-                .environmentObject(authManager)
         }
     }
 }

@@ -45,6 +45,46 @@ class CoffeeBeanManager: ObservableObject {
         saveCoffeeBeans()
     }
     
+    // 获取指定咖啡豆的最佳参数
+    func getBestParameters(for coffeeBeanId: UUID, from brewRecordStore: BrewRecordStore) -> BestParameters? {
+        return brewRecordStore.getBestParametersForCoffeeBean(coffeeBeanId)
+    }
+    
+    // 获取指定咖啡豆的所有记录数量
+    func getRecordCount(for coffeeBeanId: UUID, from brewRecordStore: BrewRecordStore) -> Int {
+        return brewRecordStore.getRecordsForCoffeeBean(coffeeBeanId).count
+    }
+    
+    // 测试方法：添加测试咖啡豆
+    func addTestCoffeeBeans() {
+        let testBeans = [
+            CoffeeBean(
+                name: "埃塞俄比亚耶加雪菲",
+                brand: "星巴克",
+                variety: "阿拉比卡",
+                origin: "埃塞俄比亚",
+                processingMethod: "水洗",
+                roastLevel: .light,
+                flavors: ["花香", "柑橘", "茉莉"],
+                dateAdded: Date()
+            ),
+            CoffeeBean(
+                name: "哥伦比亚圣图安",
+                brand: "雀巢",
+                variety: "阿拉比卡",
+                origin: "哥伦比亚",
+                processingMethod: "日晒",
+                roastLevel: .medium,
+                flavors: ["巧克力", "坚果", "焦糖"],
+                dateAdded: Date()
+            )
+        ]
+        
+        for bean in testBeans {
+            addCoffeeBean(bean)
+        }
+    }
+    
     private func saveCoffeeBeans() {
         // 这里暂时使用 UserDefaults，实际应用中可能需要连接到 Firebase
         if let encoded = try? JSONEncoder().encode(coffeeBeans) {
@@ -345,10 +385,11 @@ struct AddCoffeeBeanView: View {
     }
 }
 
-// 咖啡豆详情视图
+// MARK: - 咖啡豆详情视图
 struct CoffeeBeanDetailView: View {
     var coffeeBean: CoffeeBean
     @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var brewRecordStore: BrewRecordStore
     
     // 根据烘焙度获取对应的图片名称
     private var roastImage: String {
@@ -360,6 +401,16 @@ struct CoffeeBeanDetailView: View {
         case .dark:
             return "shenhong"
         }
+    }
+    
+    // 获取最佳参数
+    private var bestParameters: BestParameters? {
+        brewRecordStore.getBestParametersForCoffeeBean(coffeeBean.id)
+    }
+    
+    // 获取统计信息
+    private var statistics: CoffeeBeanStatistics? {
+        brewRecordStore.getStatisticsForCoffeeBean(coffeeBean.id)
     }
     
     var body: some View {
@@ -414,44 +465,186 @@ struct CoffeeBeanDetailView: View {
                     }
                 }
                 
+                // 统计信息部分
+                if let stats = statistics {
+                    Divider()
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        MixedFontText(content: "萃取统计", fontSize: 18)
+                            .font(.headline)
+                        
+                        HStack(spacing: 16) {
+                            StatCard(title: "总记录", value: "\(stats.totalRecords)")
+                            StatCard(title: "平均评分", value: String(format: "%.1f", stats.averageRating))
+                            StatCard(title: "最高评分", value: String(format: "%.1f", stats.bestRating))
+                        }
+                    }
+                    .padding(.vertical, 16)
+                    .padding(.horizontal, 16)
+                    .background(Color(UIColor.systemGray6))
+                    .cornerRadius(12)
+                }
+                
+                // 最佳参数部分
+                if let bestParams = bestParameters {
+                    Divider()
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            MixedFontText(content: "最佳参数", fontSize: 18)
+                                .font(.headline)
+                            
+                            Spacer()
+                            
+                            HStack(spacing: 4) {
+                                Image(systemName: "star.fill")
+                                    .foregroundColor(.yellow)
+                                    .font(.caption)
+                                
+                                Text(String(format: "%.1f", bestParams.rating))
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        Text("基于 \(formatDate(bestParams.date)) 的记录")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        // 关键参数卡片
+                        HStack(spacing: 12) {
+                            BestParamCard(title: "粉水比", value: bestParams.ratio)
+                            BestParamCard(title: "研磨度", value: "\(bestParams.grindSize)")
+                            BestParamCard(title: "水温", value: "\(bestParams.waterTemperature)°C")
+                        }
+                        
+                        // 详细参数
+                        VStack(spacing: 8) {
+                            BestParamRow(title: "咖啡粉重量", value: "\(bestParams.coffeeWeight) g")
+                            BestParamRow(title: "出液量", value: "\(bestParams.yieldAmount) g")
+                            BestParamRow(title: "萃取时间", value: "\(bestParams.extractionTime) 秒")
+                            
+                            if !bestParams.preInfusionTime.isEmpty {
+                                BestParamRow(title: "预浸泡时间", value: "\(bestParams.preInfusionTime) 秒")
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
+                    .padding(.vertical, 16)
+                    .padding(.horizontal, 16)
+                    .background(Color(UIColor.systemGray6))
+                    .cornerRadius(12)
+                }
+                
                 Spacer()
             }
             .padding()
         }
-        .navigationBarTitleDisplayMode(.inline)
+//        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
-                    // 返回到咖啡豆列表
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(Color(red: 0.96, green: 0.93, blue: 0.88))
-                }
-            }
-            
             ToolbarItem(placement: .principal) {
-                HStack {
-                    Image("coffee_bean")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
+                HStack(spacing: 8) {
                     
-                    MixedFontText(content: "咖啡豆详情", fontSize: 18)
-                        .font(.headline)
-                        .foregroundColor(.primary)
+                    Text("咖啡豆详情")
+                        .font(.custom("Slideqiuhong", size: 30))
+                        .fontWeight(.bold).foregroundColor(Color.theme.textColorForTitle)
                 }
+                .foregroundColor(.primary)
+                .padding(.top, 16)
+            }
+            ToolbarItem(placement: .cancellationAction) {
+                BackButton(action:{presentationMode.wrappedValue.dismiss()}
+                )
             }
         }
     }
     
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM月dd日"
+        return formatter.string(from: date)
+    }
+    
     private func detailSection(title: String, value: String) -> some View {
-        VStack(alignment: .leading) {
+        HStack(alignment: .top) {
             MixedFontText(content: title, fontSize: 18)
                 .font(.headline)
+                .frame(width: 80, alignment: .leading)
+            
             MixedFontText(content: value, fontSize: 16)
-                .padding(.bottom, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .padding(.bottom, 8)
+    }
+}
+
+// 最佳参数卡片
+struct BestParamCard: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Text(value)
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(Color.white)
+        .cornerRadius(8)
+    }
+}
+
+// 最佳参数行
+struct BestParamRow: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// 统计卡片
+struct StatCard: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Text(value)
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(Color.white)
+        .cornerRadius(8)
     }
 }
 

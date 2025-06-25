@@ -10,6 +10,7 @@ import FirebaseCore
 import Combine
 
 // 定义通知名称
+// 定义通知名称
 extension Notification.Name {
     static let switchToTab = Notification.Name("switchToTab")
 }

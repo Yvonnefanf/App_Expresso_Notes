@@ -18,30 +18,61 @@ struct LoginView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                Text(isRegistering ? "注册" : "登录")
-                    .font(.largeTitle)
-                    .bold()
+            VStack(spacing: 30) {
+                // Logo图片
+                Image("logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+                    .padding(.top, 40)
                 
-                TextField("邮箱", text: $email)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .autocapitalization(.none)
-                    .onChange(of: email) { newValue in
-                        print("邮箱输入变化：\(newValue)")
+                // 标题
+                MixedFontText(content: isRegistering ? "注册" : "登录", fontSize: 28)
+                    .foregroundColor(Color.theme.textColorForTitle)
+                    .padding(.bottom, 10)
+                
+                VStack(spacing: 20) {
+                    // 邮箱输入框
+                    VStack(alignment: .leading, spacing: 8) {
+                        MixedFontText(content: "账号邮箱", fontSize: 16)
+                            .foregroundColor(Color.theme.textColor)
+                        
+                        TextField("请输入邮箱", text: $email)
+                            .font(.custom("平方江南体", size: 16))
+                            .padding(12)
+                            .background(Color(UIColor.systemGray6))
+                            .cornerRadius(8)
+                            .autocapitalization(.none)
+                            .onChange(of: email) { newValue in
+                                print("邮箱输入变化：\(newValue)")
+                            }
                     }
-                
-                SecureField("密码", text: $password)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .onChange(of: password) { newValue in
-                        print("密码输入变化：\(newValue)")
+                    
+                    // 密码输入框
+                    VStack(alignment: .leading, spacing: 8) {
+                        MixedFontText(content: "输入密码", fontSize: 16)
+                            .foregroundColor(Color.theme.textColor)
+                        
+                        SecureField("请输入密码", text: $password)
+                            .font(.custom("平方江南体", size: 16))
+                            .padding(12)
+                            .background(Color(UIColor.systemGray6))
+                            .cornerRadius(8)
+                            .onChange(of: password) { newValue in
+                                print("密码输入变化：\(newValue)")
+                            }
                     }
+                }
+                .padding(.horizontal, 20)
                 
+                // 错误信息
                 if !errorMessage.isEmpty {
-                    Text(errorMessage)
+                    MixedFontText(content: errorMessage, fontSize: 14)
                         .foregroundColor(.red)
-                        .font(.caption)
+                        .padding(.horizontal, 20)
                 }
                 
+                // 登录按钮
                 Button(action: {
                     print("点击了\(isRegistering ? "注册" : "登录")按钮")
                     if isRegistering {
@@ -50,30 +81,54 @@ struct LoginView: View {
                         login()
                     }
                 }) {
-                    Text(isRegistering ? "注册" : "登录")
+                    MixedFontText(content: isRegistering ? "注册" : "登录", fontSize: 18)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(10)
+                        .padding(.vertical, 14)
+                        .background(Color.theme.textColorForTitle)
+                        .cornerRadius(25)
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
                 
-                Button(action: {
-                    print("切换模式：\(isRegistering ? "注册" : "登录") -> \(!isRegistering ? "注册" : "登录")")
-                    isRegistering.toggle()
-                }) {
-                    Text(isRegistering ? "已有账号？登录" : "没有账号？注册")
-                        .foregroundColor(.blue)
+                // 底部链接
+                HStack {
+                    Button(action: {
+                        print("切换到注册模式")
+                        isRegistering.toggle()
+                    }) {
+                        MixedFontText(content: "注册", fontSize: 14)
+                            .foregroundColor(Color.theme.disableColor)
+                    }
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        print("忘记密码")
+                        // TODO: 实现忘记密码功能
+                    }) {
+                        MixedFontText(content: "忘记密码", fontSize: 14)
+                            .foregroundColor(Color.theme.disableColor)
+                    }
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 10)
+                
+                Spacer()
             }
             .padding()
-            .navigationBarItems(leading: Button(action: {
-                print("点击返回按钮")
-                dismiss()
-            }) {
-                Text("返回")
-                    .foregroundColor(.gray)
-            })
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        print("点击返回按钮")
+                        dismiss()
+                    }) {
+                        Text("返回")
+                            .foregroundColor(.gray)
+                    }
+                }
+            }
             .alert("邮箱验证", isPresented: $showVerificationAlert) {
                 Button("确定") {
                     dismiss()
@@ -82,6 +137,7 @@ struct LoginView: View {
                 Text("验证邮件已发送到您的邮箱，请查收并验证。")
             }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
     
     private func login() {

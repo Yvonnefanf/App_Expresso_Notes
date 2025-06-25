@@ -12,6 +12,7 @@ struct MixedFontText: View {
     var chineseFont: String = "平方江南体"
     var latinFont: String = "umeboshi"
     var fontSize: CGFloat = 17
+    var color: Color = Color.theme.textColor
 
     var body: some View {
         let components = splitText(content)
@@ -19,6 +20,7 @@ struct MixedFontText: View {
             let isChinese = containsChinese(part)
             return result + Text(part)
                 .font(.custom(isChinese ? chineseFont : latinFont, size: fontSize))
+                .foregroundColor(color)
         }
     }
 

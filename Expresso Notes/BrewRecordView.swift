@@ -159,21 +159,15 @@ struct BrewRecordView: View {
                                 .padding(.top, 16)
                     }
                 }
-                .navigationBarItems(
-                    leading: Button(action: {
-                        dismiss()
-                        // 发送通知切换到主页
-                        NotificationCenter.default.post(name: .switchToTab, object: 0)
-                    }) {
-                        Image(systemName: "chevron.backward")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 20, height: 20) // 👈 控制大小
-                            .fontWeight(.bold)           // 👈 更粗（仅适用于某些系统图标）
-                            .foregroundColor(iconColor)
-                            .padding(.top, 16)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        BackButton(action: {
+                            dismiss()
+                            // 发送通知切换到主页
+                            NotificationCenter.default.post(name: .switchToTab, object: 0)
+                        })
                     }
-                )
+                }
                 .sheet(isPresented: $showCoffeeBeanPicker) {
                     CoffeeBeanPickerView(selectedBean: $selectedCoffeeBean)
                          .environmentObject(beanManager)

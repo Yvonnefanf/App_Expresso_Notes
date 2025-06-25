@@ -66,11 +66,6 @@ struct CoffeeBeanView: View {
     @State private var showingAddSheet = false
     @Environment(\.presentationMode) var presentationMode
     
-    private let backgroundColor = Color(red: 253/255, green: 242/255, blue: 206/255)
-    private let textColor = Color(red: 49/255, green: 54/255, blue: 56/255)
-    let textColorForTitle = Color(red: 134/255, green: 86/255, blue: 56/255)
-    let iconColor = Color(red: 162/255, green: 160/255, blue: 154/255)
-    
     // 定义网格布局
     private let gridItems = [
         GridItem(.adaptive(minimum: 130, maximum: 150), spacing: 10)
@@ -95,25 +90,6 @@ struct CoffeeBeanView: View {
                 }
                 .padding()
             }
-//            .navigationTitle("记录萃取参数")
-//            .navigationBarItems(
-////                    leading: Button(action: {
-////                        dismiss()
-////                        // 发送通知切换到主页
-////                        NotificationCenter.default.post(name: .switchToTab, object: 0)
-////                    }) {
-////                        Image(systemName: "house.fill")
-////                            .foregroundColor(textColor)
-////                    },
-//                trailing: Button(action: {
-//                    dismiss()
-//                    // 发送通知切换到主页
-//                    NotificationCenter.default.post(name: .switchToTab, object: 0)
-//                }) {
-//                    Image(systemName: "house.fill")
-//                        .foregroundColor(textColor)
-//                }
-//            )
             .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         // 居中标题
@@ -124,9 +100,8 @@ struct CoffeeBeanView: View {
                                                   .scaledToFit()
                                                   .frame(width: 50, height: 50).padding(.top, 4)
 
-                                              Text("咖啡豆")
-                                                  .font(.custom("Slideqiuhong", size: 30))
-                                                  .fontWeight(.bold).foregroundColor(textColorForTitle)
+                                              MixedFontText(content: "咖啡豆", fontSize: 30)
+                                                  .fontWeight(.bold).foregroundColor(Color.theme.textColorForTitle)
                                           }
                                           .foregroundColor(.primary)
                                           .padding(.top, 16)
@@ -145,7 +120,7 @@ struct CoffeeBeanView: View {
                                     .scaledToFit()
                                     .frame(width: 20, height: 20) // 👈 控制大小
                                     .fontWeight(.bold)
-                                    .foregroundColor(iconColor)
+                                    .foregroundColor(Color.theme.iconColor)
                                     .padding(.top, 16)
                             }
                         }
@@ -183,8 +158,7 @@ struct AddCoffeeBeanButton: View {
                                                    green: 187.0/255.0,
                                                    blue: 144.0/255.0))
                         
-                        Text("添加新咖啡豆")
-                            .font(.caption)
+                        MixedFontText(content: "添加新咖啡豆", fontSize: 12)
                             .foregroundColor(Color(red: 240.0/255.0,
                                                    green: 187.0/255.0,
                                                    blue: 144.0/255.0))
@@ -223,8 +197,7 @@ struct CoffeeBeanCard: View {
                 .scaledToFit()
                 .frame(width: 180, height: 180)
             
-            Text(coffeeBean.name)
-                .font(.caption)
+            MixedFontText(content: coffeeBean.name, fontSize: 12)
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
                 .lineLimit(1)
@@ -253,62 +226,100 @@ struct AddCoffeeBeanView: View {
     
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text("基本信息")) {
-                    TextField("咖啡豆名字 *", text: $name)
-                    TextField("品牌 *", text: $brand)
-                }
-                
-                Section(header: Text("详细信息（可选）")) {
-                    TextField("品种", text: $variety)
-                    TextField("产地", text: $origin)
-                    TextField("处理方式", text: $processingMethod)
-                }
-                
-                Section(header: Text("烘焙度")) {
-                    Picker("烘焙度", selection: $roastLevel) {
-                        ForEach(CoffeeBean.RoastLevel.allCases, id: \.self) { level in
-                            Text(level.rawValue).tag(level)
-                        }
-                    }
-                    .pickerStyle(SegmentedPickerStyle())
-                }
-                
-                Section(header: Text("口感")) {
-                    TextField("口感特点，用逗号分隔", text: $flavors)
+            VStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 24) {
+                    // 基本信息
+                    parameterInputField(title: "咖啡豆名字", binding: $name, placeholder: "输入咖啡豆名字", required: true, showError: false)
+                    parameterInputField(title: "品牌", binding: $brand, placeholder: "输入品牌", required: true, showError: false)
                     
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(flavorSuggestions, id: \.self) { flavor in
-                                Button(action: {
-                                    if flavors.isEmpty {
-                                        flavors = flavor
-                                    } else {
-                                        flavors += ", " + flavor
+                    // 详细信息（可选）
+                    parameterInputField(title: "品种", binding: $variety, placeholder: "输入品种", required: false, showError: false)
+                    parameterInputField(title: "产地", binding: $origin, placeholder: "输入产地", required: false, showError: false)
+                    parameterInputField(title: "处理方式", binding: $processingMethod, placeholder: "输入处理方式", required: false, showError: false)
+                    
+                    // 烘焙度
+                    HStack(alignment: .center) {
+                        MixedFontText(content: "烘焙度", fontSize: 18)
+                            .foregroundColor(Color.theme.textColor)
+                            .frame(width: 130, alignment: .leading)
+                        
+                        Spacer()
+                        
+                        Picker("烘焙度", selection: $roastLevel) {
+                            ForEach(CoffeeBean.RoastLevel.allCases, id: \.self) { level in
+                                MixedFontText(content: level.rawValue, fontSize: 16).tag(level)
+                            }
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                        .frame(maxWidth: .infinity)
+                    }
+                    
+                    // 口感
+                    VStack(alignment: .leading, spacing: 8) {
+                        MixedFontText(content: "口感", fontSize: 18)
+                            .foregroundColor(Color.theme.textColor)
+                        
+                        parameterInputField(title: "", binding: $flavors, placeholder: "口感特点，用逗号分隔", required: false, showError: false, labelWidth: 0)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack {
+                                ForEach(flavorSuggestions, id: \.self) { flavor in
+                                    Button(action: {
+                                        if flavors.isEmpty {
+                                            flavors = flavor
+                                        } else {
+                                            flavors += ", " + flavor
+                                        }
+                                    }) {
+                                        MixedFontText(content: flavor, fontSize: 14)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 5)
+                                            .background(Color.theme.themeColor.opacity(0.5))
+                                            .cornerRadius(15)
                                     }
-                                }) {
-                                    Text(flavor)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 5)
-                                        .background(Color(red: 0.96, green: 0.93, blue: 0.88))
-                                        .cornerRadius(15)
                                 }
                             }
                         }
+                        .padding(.vertical, 5)
                     }
-                    .padding(.vertical, 5)
                 }
-            }
-            .navigationTitle("添加咖啡豆")
-            .navigationBarItems(
-                leading: Button("取消") {
-                    presentationMode.wrappedValue.dismiss()
-                },
-                trailing: Button("保存") {
-                    saveBean()
+                .padding(20)
+                .frame(maxWidth: .infinity)
+                
+                // 保存按钮
+                Button(action: saveBean) {
+                    MixedFontText(content: "保存", fontSize: 18)
+                        .foregroundColor(Color.theme.textColor)
+                        .frame(width: 160)
+                        .padding(.vertical, 14)
+                        .background(Color.theme.buttonColor)
+                        .cornerRadius(25)
+                        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
                 }
                 .disabled(name.isEmpty || brand.isEmpty)
-            )
+                .padding(.vertical, 20)
+            }
+//            .navigationTitle("添加咖啡豆")
+            .navigationBarTitleDisplayMode(.inline) // 设置为中间小标题模式
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 8) {
+
+                                Text("添加咖啡豆")
+                                    .font(.custom("Slideqiuhong", size: 30))
+                                    .fontWeight(.bold).foregroundColor(Color.theme.textColorForTitle)
+                            }
+                            .foregroundColor(.primary)
+                            .padding(.top, 16)
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    BackButton(action: {
+                        presentationMode.wrappedValue.dismiss()
+                    })
+                }
+            }
         }
     }
     
@@ -356,12 +367,10 @@ struct CoffeeBeanDetailView: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     VStack(alignment: .leading) {
-                        Text(coffeeBean.name)
-                            .font(.largeTitle)
+                        MixedFontText(content: coffeeBean.name, fontSize: 28)
                             .bold()
                         
-                        Text(coffeeBean.brand)
-                            .font(.title3)
+                        MixedFontText(content: coffeeBean.brand, fontSize: 20)
                             .foregroundColor(.secondary)
                     }
                     
@@ -391,12 +400,12 @@ struct CoffeeBeanDetailView: View {
                 detailSection(title: "烘焙度", value: coffeeBean.roastLevel.rawValue)
                 
                 if !coffeeBean.flavors.isEmpty {
-                    Text("口感")
+                    MixedFontText(content: "口感", fontSize: 18)
                         .font(.headline)
                     
                     FlowLayout(alignment: .leading, spacing: 8) {
                         ForEach(coffeeBean.flavors, id: \.self) { flavor in
-                            Text(flavor)
+                            MixedFontText(content: flavor, fontSize: 14)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
                                 .background(Color(red: 0.96, green: 0.93, blue: 0.88))
@@ -428,7 +437,7 @@ struct CoffeeBeanDetailView: View {
                         .scaledToFit()
                         .frame(width: 30, height: 30)
                     
-                    Text("咖啡豆详情")
+                    MixedFontText(content: "咖啡豆详情", fontSize: 18)
                         .font(.headline)
                         .foregroundColor(.primary)
                 }
@@ -438,10 +447,9 @@ struct CoffeeBeanDetailView: View {
     
     private func detailSection(title: String, value: String) -> some View {
         VStack(alignment: .leading) {
-            Text(title)
+            MixedFontText(content: title, fontSize: 18)
                 .font(.headline)
-            Text(value)
-                .font(.body)
+            MixedFontText(content: value, fontSize: 16)
                 .padding(.bottom, 8)
         }
     }

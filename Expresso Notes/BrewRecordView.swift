@@ -250,6 +250,7 @@ struct BrewRecordView: View {
                         
                         TextEditor(text: $ratingDescription)
                             .font(.custom("平方江南体", size: 14))
+                            .foregroundColor(textColor)
                             .frame(minHeight: 100)
                             .padding(4)
                             .background(Color.white)
@@ -278,6 +279,7 @@ struct BrewRecordView: View {
                     Button("完成") {
                         saveRecordWithRating()
                     }
+                    .font(.custom("平方江南体", size: 18))
                     .frame(width: 120)
                     .padding()
                     .foregroundColor(textColor)

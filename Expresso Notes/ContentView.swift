@@ -7,67 +7,7 @@
 
 import SwiftUI
 import FirebaseCore
-import WebKit
 import Combine
-
-// GIF 视图组件
-struct GIFView: UIViewRepresentable {
-    let gifName: String
-    
-    func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        webView.backgroundColor = .clear
-        webView.isOpaque = false
-        webView.scrollView.isScrollEnabled = false
-        
-        // 设置 WKWebView 的缩放模式
-        webView.scrollView.contentMode = .scaleAspectFit
-        
-        // 添加自适应大小的 CSS
-        let css = """
-        <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: transparent;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        </style>
-        """
-        
-        // 从项目根目录加载 GIF
-        if let gifPath = Bundle.main.path(forResource: gifName, ofType: "gif"),
-           let gifData = try? Data(contentsOf: URL(fileURLWithPath: gifPath)) {
-            print("成功加载 GIF 文件：\(gifName)")
-            let html = """
-            <html>
-            <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                \(css)
-            </head>
-            <body>
-                <img src="data:image/gif;base64,\(gifData.base64EncodedString())" />
-            </body>
-            </html>
-            """
-            webView.loadHTMLString(html, baseURL: nil)
-        } else {
-            print("无法加载 GIF 文件：\(gifName)")
-        }
-        
-        return webView
-    }
-    
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
-}
 
 // 定义通知名称
 extension Notification.Name {
@@ -81,7 +21,6 @@ struct ContentView: View {
     @State private var showMainTabs = false
     @State private var showLogin = false
     @State private var showRegister = false
-    @State private var showGIF = false
     @State private var showLogoutAlert = false
     @State private var selectedTab = 0
     @State private var showBrewRecord = false
@@ -94,7 +33,7 @@ struct ContentView: View {
             Color.white // 白色背景
                            .ignoresSafeArea() // 覆盖整个屏幕（包括 safe area）
             if authManager.isLoggedIn {
-                VStack {
+                VStack(spacing: 0) {
                     // 主内容区域
                     ZStack {
                         switch selectedTab {
@@ -103,20 +42,12 @@ struct ContentView: View {
                             VStack {
                                 ZStack {
                                     VStack(spacing: 0) {
-                                        ZStack {
-                                            // 静态图片
-                                            Image("background")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: 400)
-                                                .opacity(showGIF ? 0 : 1)
-                                            
-                                            // GIF 图片
-                                            GIFView(gifName: "background")
-                                                .frame(width: 400)
-                                                .opacity(showGIF ? 1 : 0)
-                                        }.offset(y: 40)
-                                            .animation(.easeInOut(duration: 0.001), value: showGIF)
+                                        // 静态图片
+                                        Image("background")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 400)
+                                            .offset(y: 40)
                                         
                                         Button(action: {
                                             DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
@@ -128,7 +59,7 @@ struct ContentView: View {
                                                 .scaledToFit()
                                                 .frame(width: 160, height: 100)
                                         }
-                                        .offset(y: -10)
+                                        .offset(y: 10)
                                     }
                                     .padding()
                                     .background(Color.white.opacity(0.8))
@@ -150,7 +81,10 @@ struct ContentView: View {
                             EmptyView()
                         }
                     }
-                    if selectedTab == 0{
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    
+                    // 菜单栏 - 只在首页显示
+                    if selectedTab == 0 {
                         HStack {
                             CustomTabButton(image: "coffeenote", title: "笔记", isSelected: selectedTab == 1) {
                                 selectedTab = 1
@@ -171,7 +105,7 @@ struct ContentView: View {
                             Color.white
                                 .ignoresSafeArea(edges: .bottom)
                         )
-                        .frame(maxWidth: .infinity) // 整行撑满宽度
+                        .frame(maxWidth: .infinity)
                     }
                 }
                 .onAppear {
@@ -196,9 +130,7 @@ struct ContentView: View {
                 } message: {
                     Text("确定要退出登录吗？")
                 }
-                .sheet(isPresented: $showBrewRecord, onDismiss: {
-                    showGIF = false
-                }) {
+                .sheet(isPresented: $showBrewRecord) {
                     BrewRecordView()
                         .environmentObject(brewRecordStore)
                         .environmentObject(beanManager)

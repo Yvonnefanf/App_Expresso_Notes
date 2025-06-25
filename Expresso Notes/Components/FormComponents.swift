@@ -14,7 +14,8 @@ func parameterInputField(
     showError: Bool,
     textColor: Color = Color(red: 134/255, green: 86/255, blue: 56/255).opacity(0.8),
     disableColor: Color = Color(red: 162/255, green: 160/255, blue: 154/255),
-    errorHighlightColor: Color = .red
+    errorHighlightColor: Color = .red,
+    labelWidth: Double = 130
 ) -> some View {
     HStack(alignment: .center) {
         // 标签
@@ -27,7 +28,7 @@ func parameterInputField(
                     .foregroundColor(.red)
             }
         }
-        .frame(width: 130, alignment: .leading)
+        .frame(width: labelWidth, alignment: .leading)
 
         Spacer()
 

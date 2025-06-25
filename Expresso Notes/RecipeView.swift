@@ -3,32 +3,50 @@ import SwiftUI
 struct RecipeView: View {
     @Binding var selectedTab: Int
     
+    // 创建4行3列的网格布局
+    let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    
     var body: some View {
         ZStack {
-            VStack {
-                // 自定义返回按钮
+            Color.white.ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                // 使用全局返回按钮组件
                 HStack {
-                    Button(action: {
+                    BackButton(action: {
                         selectedTab = 0
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "chevron.left")
-                                .foregroundColor(.black)
-                                .font(.title2)
-                           
-                        }
-                    }
-                    .padding(.leading, 16)
-                    .padding(.top, 16)
+                    })
                     
                     Spacer()
                 }
+                .padding(.horizontal)
                 
-                Spacer()
-                Image("caipu_content")
+                // Title图片在顶部正中间
+                Image("title")
                     .resizable()
-                    .scaledToFit() // 保持比例，铺满宽度
-                    .frame(maxWidth: .infinity)
+                    .scaledToFit()
+                    .frame(maxHeight: 80)
+                    .padding(.top, 10)
+                
+                // 4行3列的图片网格
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 15) {
+                        ForEach(1...12, id: \.self) { index in
+                            Image("cof\(index)")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: .infinity)
+                                .aspectRatio(1, contentMode: .fit)
+                                .cornerRadius(8)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                
                 Spacer()
             }
         }

@@ -95,9 +95,9 @@ struct ContentView: View {
                             CustomTabButton(image: "recipe", title: "菜谱", isSelected: selectedTab == 3) {
                                 selectedTab = 3
                             }
-                            CustomTabButton(image: "profile", title: "我的", isSelected: selectedTab == 4) {
+                            CustomTabButton(image: "profile", title: "我的", isSelected: selectedTab == 4, action:  {
                                 selectedTab = 4
-                            }
+                            }, iconSize: 40)
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 8)
@@ -194,6 +194,7 @@ struct CustomTabButton: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
+    var iconSize: CGFloat = 46
 
     var body: some View {
         Button(action: action) {
@@ -201,7 +202,7 @@ struct CustomTabButton: View {
                 Image(image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 46, height: 46)
+                    .frame(width: iconSize, height: iconSize)
                 Text(title)
                     .font(.custom("平方江南体", size: isSelected ? 20 : 16))
                     .fixedSize(horizontal: true, vertical: false)

@@ -36,10 +36,11 @@ struct CoffeeBeanDetailView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            // MARK: - 咖啡豆名称
+            VStack(alignment: .leading, spacing: 20) {
                 HStack {
-                    VStack(alignment: .leading) {
-                        MixedFontText(content: coffeeBean.name, fontSize: 28)
+                    VStack(alignment: .leading, spacing: 16) {
+                        MixedFontText(content: coffeeBean.name, fontSize: 24)
                             .bold()
                         
                         MixedFontText(content: coffeeBean.brand, fontSize: 20)
@@ -52,41 +53,44 @@ struct CoffeeBeanDetailView: View {
                     Image(roastImage)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 70, height: 70)
-                }
+                        .frame(width: 70, height: 90)
+                }.padding(.leading, 20).padding(.trailing, 20)
                 
                 Divider()
-                
-                if !coffeeBean.variety.isEmpty {
-                    detailSection(title: "品种", value: coffeeBean.variety)
-                }
-                
-                if !coffeeBean.origin.isEmpty {
-                    detailSection(title: "产地", value: coffeeBean.origin)
-                }
-                
-                if !coffeeBean.processingMethod.isEmpty {
-                    detailSection(title: "处理方式", value: coffeeBean.processingMethod)
-                }
-                
-                detailSection(title: "烘焙度", value: coffeeBean.roastLevel.rawValue)
-                
-                if !coffeeBean.flavors.isEmpty {
-                    MixedFontText(content: "口感", fontSize: 18)
-                        .font(.headline)
+                // MARK: - 咖啡豆基本信息
+                VStack(alignment: .leading){
+                    if !coffeeBean.variety.isEmpty {
+                        detailSection(title: "品种:", value: coffeeBean.variety)
+                    }
                     
-                    FlowLayout(alignment: .leading, spacing: 8) {
-                        ForEach(coffeeBean.flavors, id: \.self) { flavor in
-                            MixedFontText(content: flavor, fontSize: 14)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color(red: 0.96, green: 0.93, blue: 0.88))
-                                .cornerRadius(15)
+                    if !coffeeBean.origin.isEmpty {
+                        detailSection(title: "产地:", value: coffeeBean.origin)
+                    }
+                    
+                    if !coffeeBean.processingMethod.isEmpty {
+                        detailSection(title: "处理方式:", value: coffeeBean.processingMethod)
+                    }
+                    
+                    detailSection(title: "烘焙度:", value: coffeeBean.roastLevel.rawValue)
+                    
+                    if !coffeeBean.flavors.isEmpty {
+                        MixedFontText(content: "口感:", fontSize: 18)
+                            .font(.headline)
+                        
+                        FlowLayout(alignment: .leading, spacing: 8) {
+                            ForEach(coffeeBean.flavors, id: \.self) { flavor in
+                                MixedFontText(content: flavor, fontSize: 14)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color(red: 0.96, green: 0.93, blue: 0.88))
+                                    .cornerRadius(15)
+                            }
                         }
                     }
-                }
+                }.padding(.leading, 20).padding(.trailing, 20)
                 
-                // 统计信息部分
+                
+                // MARK: - 咖啡豆 萃取统计信息
                 if let stats = statistics {
                     Divider()
                     
@@ -95,18 +99,17 @@ struct CoffeeBeanDetailView: View {
                             .font(.headline)
                         
                         HStack(spacing: 16) {
-                            StatCard(title: "总记录", value: "\(stats.totalRecords)")
-                            StatCard(title: "平均评分", value: String(format: "%.1f", stats.averageRating))
-                            StatCard(title: "最高评分", value: String(format: "%.1f", stats.bestRating))
+                            
+                            DataCard(title: "总记录", value: "\(stats.totalRecords)")
+                            DataCard(title: "平均评分", value: String(format: "%.1f", stats.averageRating))
+                            DataCard(title: "最高评分", value: String(format: "%.1f", stats.bestRating))
                         }
                     }
-                    .padding(.vertical, 16)
-                    .padding(.horizontal, 16)
-                    .background(Color(UIColor.systemGray6))
+                    .background(Color.theme.backgroundColor)
                     .cornerRadius(12)
                 }
                 
-                // 最佳参数部分
+                // MARK: - 咖啡豆 最佳参数信息
                 if let bestParams = bestParameters {
                     Divider()
                     
@@ -129,32 +132,30 @@ struct CoffeeBeanDetailView: View {
                             }
                         }
                         
-                        Text("基于 \(formatDate(bestParams.date)) 的记录")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        MixedFontText(content: "基于 \(formatDate(bestParams.date)) 的记录", fontSize: 14, color:.secondary )
                         
                         // 关键参数卡片
                         HStack(spacing: 12) {
-                            BestParamCard(title: "粉水比", value: bestParams.ratio)
-                            BestParamCard(title: "研磨度", value: "\(bestParams.grindSize)")
-                            BestParamCard(title: "水温", value: "\(bestParams.waterTemperature)°C")
-                        }
+                            DataCard(title: "粉水比", value: bestParams.ratio)
+                            DataCard(title: "研磨度", value: "\(bestParams.grindSize)")
+                            DataCard(title: "水温", value: "\(bestParams.waterTemperature)°C")
+                        }.padding(.top, 8)
                         
                         // 详细参数
                         VStack(spacing: 8) {
-                            BestParamRow(title: "咖啡粉重量", value: "\(bestParams.coffeeWeight) g")
-                            BestParamRow(title: "出液量", value: "\(bestParams.yieldAmount) g")
-                            BestParamRow(title: "萃取时间", value: "\(bestParams.extractionTime) 秒")
+                            DataRow(title: "咖啡粉重量", value: "\(bestParams.coffeeWeight) g")
+                            DataRow(title: "出液量", value: "\(bestParams.yieldAmount) g")
+                            DataRow(title: "萃取时间", value: "\(bestParams.extractionTime) 秒")
                             
                             if !bestParams.preInfusionTime.isEmpty {
-                                BestParamRow(title: "预浸泡时间", value: "\(bestParams.preInfusionTime) 秒")
+                                DataRow(title: "预浸泡时间", value: "\(bestParams.preInfusionTime) 秒")
                             }
                         }
-                        .padding(.top, 8)
+                        .padding(.top, 8).padding(.leading, 20).padding(.trailing, 20)
                     }
                     .padding(.vertical, 16)
                     .padding(.horizontal, 16)
-                    .background(Color(UIColor.systemGray6))
+                    .background(Color.theme.backgroundColor)
                     .cornerRadius(12)
                 }
                 
@@ -162,7 +163,7 @@ struct CoffeeBeanDetailView: View {
             }
             .padding()
         }
-//        .navigationBarTitleDisplayMode(.inline)
+
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -198,74 +199,6 @@ struct CoffeeBeanDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.bottom, 8)
-    }
-}
-
-// 最佳参数卡片
-struct BestParamCard: View {
-    let title: String
-    let value: String
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            Text(value)
-                .font(.title3)
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-        .background(Color.white)
-        .cornerRadius(8)
-    }
-}
-
-// 最佳参数行
-struct BestParamRow: View {
-    let title: String
-    let value: String
-    
-    var body: some View {
-        HStack {
-            Text(title)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            
-            Spacer()
-            
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.primary)
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-// 统计卡片
-struct StatCard: View {
-    let title: String
-    let value: String
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            Text(value)
-                .font(.title3)
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-        .background(Color.white)
-        .cornerRadius(8)
     }
 }
 
@@ -324,73 +257,73 @@ struct FlowLayout: Layout {
     }
 }
 
-// MARK: - MOCK data for preview
-struct CoffeeBeanDetailView_Previews: PreviewProvider {
-    static var previews: some View {
-        let testBean = CoffeeBean(
-            id: UUID(),
-            name: "埃塞俄比亚耶加雪菲",
-            brand: "星巴克",
-            variety: "Heirloom",
-            origin: "耶加雪菲, 埃塞俄比亚",
-            processingMethod: "水洗",
-            roastLevel: .light,
-            flavors: ["柑橘", "花香", "莓果"],
-            dateAdded: Date()
-        )
-        
-        let brewRecordStore = BrewRecordStore()
-        
-        // Add mock brew records for preview
-        let coffeeBeanRef = CoffeeBeanReference(from: testBean)
-        let mockRecords = [
-            BrewRecord(
-                date: Date().addingTimeInterval(-86400), // 1 day ago
-                coffeeBean: coffeeBeanRef,
-                coffeeWeight: "18",
-                waterTemperature: 92,
-                grindSize: 4,
-                preInfusionTime: "30",
-                extractionTime: "120",
-                yieldAmount: "36",
-                rating: 8.5,
-                ratingDescription: "花香明显，酸度适中"
-            ),
-            BrewRecord(
-                date: Date().addingTimeInterval(-172800), // 2 days ago
-                coffeeBean: coffeeBeanRef,
-                coffeeWeight: "18",
-                waterTemperature: 90,
-                grindSize: 5,
-                preInfusionTime: "25",
-                extractionTime: "110",
-                yieldAmount: "36",
-                rating: 9.2,
-                ratingDescription: "柑橘香气突出，口感平衡"
-            ),
-            BrewRecord(
-                date: Date().addingTimeInterval(-259200), // 3 days ago
-                coffeeBean: coffeeBeanRef,
-                coffeeWeight: "18",
-                waterTemperature: 94,
-                grindSize: 3,
-                preInfusionTime: "35",
-                extractionTime: "130",
-                yieldAmount: "36",
-                rating: 7.8,
-                ratingDescription: "萃取过度，苦味较重"
-            )
-        ]
-        
-        // Add records to the store
-        for record in mockRecords {
-            brewRecordStore.addRecord(record)
-        }
-
-        return NavigationView {
-            CoffeeBeanDetailView(coffeeBean: testBean)
-                .environmentObject(brewRecordStore)
-        }
-    }
-}
+// MARK: - MOCK data for preview (only open when testing / debugging)
+//struct CoffeeBeanDetailView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        let testBean = CoffeeBean(
+//            id: UUID(),
+//            name: "埃塞俄比亚耶加雪菲",
+//            brand: "星巴克",
+//            variety: "Heirloom",
+//            origin: "耶加雪菲, 埃塞俄比亚",
+//            processingMethod: "水洗",
+//            roastLevel: .light,
+//            flavors: ["柑橘", "花香", "莓果"],
+//            dateAdded: Date()
+//        )
+//        
+//        let brewRecordStore = BrewRecordStore()
+//        
+//        // Add mock brew records for preview
+//        let coffeeBeanRef = CoffeeBeanReference(from: testBean)
+//        let mockRecords = [
+//            BrewRecord(
+//                date: Date().addingTimeInterval(-86400), // 1 day ago
+//                coffeeBean: coffeeBeanRef,
+//                coffeeWeight: "18",
+//                waterTemperature: 92,
+//                grindSize: 4,
+//                preInfusionTime: "30",
+//                extractionTime: "120",
+//                yieldAmount: "36",
+//                rating: 8.5,
+//                ratingDescription: "花香明显，酸度适中"
+//            ),
+//            BrewRecord(
+//                date: Date().addingTimeInterval(-172800), // 2 days ago
+//                coffeeBean: coffeeBeanRef,
+//                coffeeWeight: "18",
+//                waterTemperature: 90,
+//                grindSize: 5,
+//                preInfusionTime: "25",
+//                extractionTime: "110",
+//                yieldAmount: "36",
+//                rating: 9.2,
+//                ratingDescription: "柑橘香气突出，口感平衡"
+//            ),
+//            BrewRecord(
+//                date: Date().addingTimeInterval(-259200), // 3 days ago
+//                coffeeBean: coffeeBeanRef,
+//                coffeeWeight: "18",
+//                waterTemperature: 94,
+//                grindSize: 3,
+//                preInfusionTime: "35",
+//                extractionTime: "130",
+//                yieldAmount: "36",
+//                rating: 7.8,
+//                ratingDescription: "萃取过度，苦味较重"
+//            )
+//        ]
+//        
+//        // Add records to the store
+//        for record in mockRecords {
+//            brewRecordStore.addRecord(record)
+//        }
+//
+//        return NavigationView {
+//            CoffeeBeanDetailView(coffeeBean: testBean)
+//                .environmentObject(brewRecordStore)
+//        }
+//    }
+//}
 

@@ -210,70 +210,30 @@ struct BrewRecordDetailView: View {
     }
 }
 
-struct DataCard: View {
-    let title: String
-    let value: String
-    
-    var body: some View {
-        VStack(spacing: 5) {
-            MixedFontText(content: title)
-            
-            Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(Color.theme.textColor)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .background(Color.theme.themeColor2.opacity(0.3))
-        .cornerRadius(10)
-    }
-}
-
-struct DataRow: View {
-    let title: String
-    let value: String
-    
-    var body: some View {
-        HStack {
-            MixedFontText(content: title)
-            
-            Spacer()
-            
-//            Text(value)
-//                .font(.title2)
-//                .fontWeight(.bold)
-//                .foregroundColor(Color.theme.textColor)
-            MixedFontText(content: value, fontSize: 22)
-                .fontWeight(.bold)
-        }
-        .padding(.vertical, 8)
-    }
-}
-
-struct BrewRecordDetailView_Previews: PreviewProvider {
- 
-    
-    static var previews: some View {
-        let testBean1 = CoffeeBeanReference(
-            id: UUID(), // 使用固定ID便于测试
-            name: "埃塞俄比亚耶加雪菲",
-            brand: "星巴克",
-            roastLevel: "浅焙"
-        )
-        NavigationView {
-            BrewRecordDetailView(record: BrewRecord(
-                date: Date(),
-                coffeeBean: testBean1,
-                coffeeWeight: "18",
-                waterTemperature: 92,
-                grindSize: 4,
-                preInfusionTime: "30",
-                extractionTime: "120",
-                yieldAmount: "36",
-                rating: 8,
-                ratingDescription: "haode"
-            ))
-        }
-    }
-} 
+// MARK: - MOCK data for preview (only open when testing / debugging)
+//struct BrewRecordDetailView_Previews: PreviewProvider {
+// 
+//    
+//    static var previews: some View {
+//        let testBean1 = CoffeeBeanReference(
+//            id: UUID(), // 使用固定ID便于测试
+//            name: "埃塞俄比亚耶加雪菲",
+//            brand: "星巴克",
+//            roastLevel: "浅焙"
+//        )
+//        NavigationView {
+//            BrewRecordDetailView(record: BrewRecord(
+//                date: Date(),
+//                coffeeBean: testBean1,
+//                coffeeWeight: "18",
+//                waterTemperature: 92,
+//                grindSize: 4,
+//                preInfusionTime: "30",
+//                extractionTime: "120",
+//                yieldAmount: "36",
+//                rating: 8,
+//                ratingDescription: "haode"
+//            ))
+//        }
+//    }
+//} 

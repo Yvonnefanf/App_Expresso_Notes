@@ -7,52 +7,44 @@ struct BrewRecordDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // 头部信息
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(formatDate(record.date))
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    Text("咖啡萃取记录")
-                        .font(.title)
-                        .fontWeight(.bold)
+                VStack(alignment: .center, spacing: 20) {
+                    MixedFontText(content: formatDate(record.date),color: Color.theme.disableColor)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal)
-                
                 // 咖啡豆信息
                 if let bean = record.coffeeBean {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("咖啡豆")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        
-                        HStack(spacing: 15) {
+                    VStack(alignment: .leading, spacing: 20) {
+//                        Text("咖啡豆")
+//                            .font(.headline)
+//                            .foregroundColor(.secondary)
+                        HStack(spacing: 0) {
                             // 烘焙度图片
                             Image(getRoastImage(for: bean.roastLevel))
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 60, height: 60)
+                                .frame(width: 90, height: 90)
                             
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(bean.name)
-                                    .font(.title3)
-                                    .fontWeight(.medium)
+                            VStack(alignment: .leading, spacing: 12) {
+                                MixedFontText(
+                                    content: bean.name, fontSize: 20
+                                ).fontWeight(.medium)
                                 
-                                Text(bean.brand)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                MixedFontText(
+                                    content: bean.brand, fontSize: 18, color: Color.theme.textColor.opacity(0.7)
+                                )
                                 
-                                Text(bean.roastLevel)
-                                    .font(.caption)
+                                MixedFontText(content: bean.roastLevel)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 2)
-                                    .background(Color(UIColor.systemGray5))
+                                    .background(Color.theme.themeColor2.opacity(0.5))
                                     .cornerRadius(4)
                             }
                         }
                     }
                     .padding(.horizontal)
                     .padding(.vertical, 16)
+                    .frame(maxWidth: .infinity)
                     .background(Color(UIColor.systemBackground))
                     .cornerRadius(10)
                     .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
@@ -62,20 +54,22 @@ struct BrewRecordDetailView: View {
                 // 评分
                 if let rating = record.rating {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("评分")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
+                        MixedFontText(content: systemRatingDescription(for: rating), color: ratingColor(for: rating))
+//                        Text(systemRatingDescription(for: rating))
+//                            .font(.subheadline)
+//                            .foregroundColor(.secondary)
+//                            .padding(.top, 2)
                         
                         HStack {
                             // 评分条
                             ZStack(alignment: .leading) {
                                 Rectangle()
-                                    .frame(height: 12)
+                                    .frame(height: 10)
                                     .foregroundColor(Color(UIColor.systemGray5))
                                     .cornerRadius(6)
                                 
                                 Rectangle()
-                                    .frame(width: CGFloat(rating / 10.0) * UIScreen.main.bounds.width * 0.8, height: 12)
+                                    .frame(width: CGFloat(rating / 10.0) * UIScreen.main.bounds.width * 0.8, height: 10)
                                     .foregroundColor(ratingColor(for: rating))
                                     .cornerRadius(6)
                             }
@@ -86,37 +80,30 @@ struct BrewRecordDetailView: View {
                                 .padding(.leading, 8)
                         }
                         
-                        Text(systemRatingDescription(for: rating))
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .padding(.top, 2)
-                        
                         // 个人评价
                         if let description = record.ratingDescription, !description.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("个人评价")
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                                    .padding(.top, 4)
-                                
-                                Text(description)
-                                    .font(.body)
-                                    .padding(12)
-                                    .background(Color(UIColor.systemGray6))
-                                    .cornerRadius(8)
+                                MixedFontText(content: "📒🖊️: " + description )
+//                                Text("详细描述: " + description)
+//                                    .font(.headline)
+//                                    .foregroundColor(.secondary)
+                                    .padding(.top, 12)
                             }
                         }
                     }
                     .padding(.horizontal)
                     .padding(.vertical, 16)
-                    .background(Color(UIColor.systemBackground))
+                    .padding(.leading, 20)
+                    .padding(.trailing, 20)
+                    .background(Color.theme.backgroundColor)
                     .cornerRadius(10)
                     .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
                     .padding(.horizontal)
+                    
                 }
                 
-                // 分割线
-                Divider()
+//                // 分割线
+//                Divider()
                 
                 // 关键数据概览
                 HStack(spacing: 20) {
@@ -124,7 +111,7 @@ struct BrewRecordDetailView: View {
                     DataCard(title: "研磨度", value: "\(record.grindSize)")
                     DataCard(title: "水温", value: "\(record.waterTemperature)°C")
                 }
-                .padding(.horizontal)
+                .padding(.horizontal).padding(.top, 20)
                 
                 // 详细数据
                 Group {
@@ -137,13 +124,35 @@ struct BrewRecordDetailView: View {
                     }
                 }
                 .padding(.horizontal)
+                .padding(.leading, 20)
+                .padding(.trailing, 20)
+        
                 
                 Spacer()
             }
             .padding(.vertical)
         }
-        .navigationTitle("记录详情")
+//        .navigationTitle("记录详情")
+//        .navigationBarTitleDisplayMode(.inline)
+//        
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar{
+            ToolbarItem(placement: .principal){
+                Text("记录详情")
+                    .font(.custom("Slideqiuhong", size: 30))
+                    .fontWeight(.bold).foregroundColor(Color.theme.textColorForTitle)
+            }
+            ToolbarItem(placement: .cancellationAction) {
+                    BackButton(action: {
+//                        dismiss()
+//                        // 发送通知切换到主页
+//                        NotificationCenter.default.post(name: .switchToTab, object: 0)
+                    })
+                }
+            
+        }
+            
+        
     }
     
     private func formatDate(_ date: Date) -> String {
@@ -207,17 +216,16 @@ struct DataCard: View {
     
     var body: some View {
         VStack(spacing: 5) {
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
+            MixedFontText(content: title)
             
             Text(value)
                 .font(.title2)
                 .fontWeight(.bold)
+                .foregroundColor(Color.theme.textColor)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        .background(Color(UIColor.systemGray6))
+        .background(Color.theme.themeColor2.opacity(0.3))
         .cornerRadius(10)
     }
 }
@@ -228,29 +236,43 @@ struct DataRow: View {
     
     var body: some View {
         HStack {
-            Text(title)
-                .foregroundColor(.secondary)
+            MixedFontText(content: title)
             
             Spacer()
             
-            Text(value)
-                .fontWeight(.medium)
+//            Text(value)
+//                .font(.title2)
+//                .fontWeight(.bold)
+//                .foregroundColor(Color.theme.textColor)
+            MixedFontText(content: value, fontSize: 22)
+                .fontWeight(.bold)
         }
         .padding(.vertical, 8)
     }
 }
 
 struct BrewRecordDetailView_Previews: PreviewProvider {
+ 
+    
     static var previews: some View {
+        let testBean1 = CoffeeBeanReference(
+            id: UUID(), // 使用固定ID便于测试
+            name: "埃塞俄比亚耶加雪菲",
+            brand: "星巴克",
+            roastLevel: "浅焙"
+        )
         NavigationView {
             BrewRecordDetailView(record: BrewRecord(
                 date: Date(),
+                coffeeBean: testBean1,
                 coffeeWeight: "18",
                 waterTemperature: 92,
                 grindSize: 4,
                 preInfusionTime: "30",
                 extractionTime: "120",
-                yieldAmount: "36"
+                yieldAmount: "36",
+                rating: 8,
+                ratingDescription: "haode"
             ))
         }
     }

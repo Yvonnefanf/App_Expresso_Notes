@@ -29,11 +29,10 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            Color.white // 白色背景
-                           .ignoresSafeArea() // 覆盖整个屏幕（包括 safe area）
+            Color.theme.backgroundColor.ignoresSafeArea() // all white
             if authManager.isLoggedIn {
                 VStack(spacing: 0) {
-                    // 主内容区域
+                    // 已经登陆 主内容区域
                     ZStack {
                         switch selectedTab {
                         case 0:
@@ -157,20 +156,10 @@ struct CustomTabButton: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: iconSize, height: iconSize)
-                Text(title)
-                    .font(.custom("平方江南体", size: isSelected ? 20 : 16))
+                MixedFontText(content: title)
                     .fixedSize(horizontal: true, vertical: false)
                     .onAppear {
                         print("Button title: \(title), isSelected: \(isSelected)")
-                        // 打印所有可用字体
-                        for family in UIFont.familyNames {
-                            if family.contains("umeboshi") {
-                                print("Found umeboshi font family: \(family)")
-                                for name in UIFont.fontNames(forFamilyName: family) {
-                                    print("Font name: \(name)")
-                                }
-                            }
-                        }
                     }
             }
             .foregroundColor(isSelected

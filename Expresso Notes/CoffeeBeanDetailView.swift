@@ -340,6 +340,52 @@ struct CoffeeBeanDetailView_Previews: PreviewProvider {
         )
         
         let brewRecordStore = BrewRecordStore()
+        
+        // Add mock brew records for preview
+        let coffeeBeanRef = CoffeeBeanReference(from: testBean)
+        let mockRecords = [
+            BrewRecord(
+                date: Date().addingTimeInterval(-86400), // 1 day ago
+                coffeeBean: coffeeBeanRef,
+                coffeeWeight: "18",
+                waterTemperature: 92,
+                grindSize: 4,
+                preInfusionTime: "30",
+                extractionTime: "120",
+                yieldAmount: "36",
+                rating: 8.5,
+                ratingDescription: "花香明显，酸度适中"
+            ),
+            BrewRecord(
+                date: Date().addingTimeInterval(-172800), // 2 days ago
+                coffeeBean: coffeeBeanRef,
+                coffeeWeight: "18",
+                waterTemperature: 90,
+                grindSize: 5,
+                preInfusionTime: "25",
+                extractionTime: "110",
+                yieldAmount: "36",
+                rating: 9.2,
+                ratingDescription: "柑橘香气突出，口感平衡"
+            ),
+            BrewRecord(
+                date: Date().addingTimeInterval(-259200), // 3 days ago
+                coffeeBean: coffeeBeanRef,
+                coffeeWeight: "18",
+                waterTemperature: 94,
+                grindSize: 3,
+                preInfusionTime: "35",
+                extractionTime: "130",
+                yieldAmount: "36",
+                rating: 7.8,
+                ratingDescription: "萃取过度，苦味较重"
+            )
+        ]
+        
+        // Add records to the store
+        for record in mockRecords {
+            brewRecordStore.addRecord(record)
+        }
 
         return NavigationView {
             CoffeeBeanDetailView(coffeeBean: testBean)

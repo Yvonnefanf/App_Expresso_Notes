@@ -12,7 +12,7 @@ struct RecipeView: View {
     
     var body: some View {
         ZStack {
-            Color.white.ignoresSafeArea()
+            Color(red: 1, green: 1, blue: 1).ignoresSafeArea() // 强制白色背景，不受夜间模式影响
             
             VStack(spacing: 20) {
                 // 使用全局返回按钮组件
@@ -32,20 +32,18 @@ struct RecipeView: View {
                     .frame(maxHeight: 80)
                     .padding(.top, 10)
                 
-                // 4行3列的图片网格
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 15) {
-                        ForEach(1...12, id: \.self) { index in
-                            Image("cof\(index)")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: .infinity)
-                                .aspectRatio(1, contentMode: .fit)
-                                .cornerRadius(8)
-                        }
+                // 4行3列的图片网格（不可滑动）
+                LazyVGrid(columns: columns, spacing: 15) {
+                    ForEach(1...12, id: \.self) { index in
+                        Image("cof\(index)")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity)
+                            .aspectRatio(1, contentMode: .fit)
+                            .cornerRadius(8)
                     }
-                    .padding(.horizontal)
                 }
+                .padding(.horizontal)
                 
                 Spacer()
             }

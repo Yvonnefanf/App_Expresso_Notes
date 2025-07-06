@@ -10,7 +10,6 @@ import FirebaseCore
 import Combine
 
 // 定义通知名称
-// 定义通知名称
 extension Notification.Name {
     static let switchToTab = Notification.Name("switchToTab")
 }
@@ -19,10 +18,15 @@ struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
     @EnvironmentObject var brewRecordStore: BrewRecordStore
     @EnvironmentObject var beanManager: CoffeeBeanManager
+    @EnvironmentObject var purchaseManager: PurchaseManager
     @State private var showMainTabs = false
     @State private var showLogoutAlert = false
     @State private var selectedTab = 0
     @State private var showBrewRecord = false
+    @State private var showFirstTimeSetup = false
+    @State private var setupUsername = ""
+    @State private var setupCoffeeMachine = ""
+    @State private var setupGrinder = ""
     
     // 添加通知观察者
     @State private var notificationSubscription: AnyCancellable?
@@ -75,6 +79,7 @@ struct ContentView: View {
                         case 4:
                             UserView()
                                 .environmentObject(authManager)
+                                .environmentObject(purchaseManager)
                         default:
                             EmptyView()
                         }
@@ -93,9 +98,9 @@ struct ContentView: View {
                             CustomTabButton(image: "recipe", title: "菜谱", isSelected: selectedTab == 3) {
                                 selectedTab = 3
                             }
-                            CustomTabButton(image: "profile", title: "我的", isSelected: selectedTab == 4, action:  {
+                            CustomTabButton(image: "profile", title: "我的", isSelected: selectedTab == 4) {
                                 selectedTab = 4
-                            }, iconSize: 40)
+                            }
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 8)
@@ -115,6 +120,13 @@ struct ContentView: View {
                                 selectedTab = tabIndex
                             }
                         }
+                }
+                .onChange(of: authManager.isFirstLogin) { isFirstLogin in
+                    if isFirstLogin {
+                        // 预填充用户名
+                        setupUsername = authManager.username
+                        showFirstTimeSetup = true
+                    }
                 }
                 .onDisappear {
                     // 清理通知监听
@@ -138,7 +150,122 @@ struct ContentView: View {
                 LoginView()
                     .environmentObject(authManager)
             }
+            
+            // 首次登录设置弹窗
+            if showFirstTimeSetup {
+                firstTimeSetupDialog
+            }
         }
+    }
+    
+    // MARK: - 首次设置弹窗
+    var firstTimeSetupDialog: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    // 防止点击背景关闭
+                }
+            
+            VStack(spacing: 20) {
+                MixedFontText(content: "完善个人信息", fontSize: 20)
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.theme.textColorForTitle)
+                
+                Text("首次登录，请设置您的个人信息和设备参数")
+                    .font(.system(size: 14))
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(Color.theme.textColor)
+                
+                VStack(spacing: 16) {
+                    // 用户名输入框
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            MixedFontText(content: "用户名", fontSize: 16)
+                                .foregroundColor(Color.theme.textColor)
+                            Text("*")
+                                .font(.system(size: 16))
+                                .foregroundColor(.red)
+                        }
+                        TextField("请输入用户名", text: $setupUsername)
+                            .font(.system(size: 14))
+                            .padding(12)
+                            .background(Color(UIColor.systemGray6))
+                            .cornerRadius(8)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                    }
+                    
+                    // 咖啡机型号输入框
+                    VStack(alignment: .leading, spacing: 8) {
+                        MixedFontText(content: "咖啡机型号", fontSize: 16)
+                            .foregroundColor(Color.theme.textColor)
+                        TextField("请输入咖啡机型号（可选）", text: $setupCoffeeMachine)
+                            .font(.system(size: 14))
+                            .padding(12)
+                            .background(Color(UIColor.systemGray6))
+                            .cornerRadius(8)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                    }
+                    
+                    // 磨豆机型号输入框
+                    VStack(alignment: .leading, spacing: 8) {
+                        MixedFontText(content: "磨豆机型号", fontSize: 16)
+                            .foregroundColor(Color.theme.textColor)
+                        TextField("请输入磨豆机型号（可选）", text: $setupGrinder)
+                            .font(.system(size: 14))
+                            .padding(12)
+                            .background(Color(UIColor.systemGray6))
+                            .cornerRadius(8)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                    }
+                }
+                
+                // 按钮
+                Button(action: {
+                    saveFirstTimeSetup()
+                }) {
+                    MixedFontText(content: "完成设置", fontSize: 16)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 30)
+                        .padding(.vertical, 12)
+                        .background(setupUsername.isEmpty ? Color.theme.disableColor : Color.theme.buttonColor)
+                        .cornerRadius(25)
+                }
+                .disabled(setupUsername.isEmpty)
+                .opacity(setupUsername.isEmpty ? 0.3 : 1.0)
+            }
+            .padding(30)
+            .background(Color(red: 1, green: 1, blue: 1))
+            .cornerRadius(20)
+            .shadow(radius: 10)
+            .padding(.horizontal, 40)
+        }
+        .zIndex(1000)
+        .transition(.scale.combined(with: .opacity))
+    }
+    
+    // MARK: - 保存首次设置
+    private func saveFirstTimeSetup() {
+        print("保存首次设置...")
+        authManager.saveFirstTimeSetup(
+            username: setupUsername,
+            coffeeMachine: setupCoffeeMachine,
+            grinder: setupGrinder
+        )
+        
+        // 关闭弹窗
+        withAnimation(.easeInOut(duration: 0.3)) {
+            showFirstTimeSetup = false
+        }
+        
+        // 清空输入内容
+        setupUsername = ""
+        setupCoffeeMachine = ""
+        setupGrinder = ""
     }
 }
 
@@ -175,6 +302,7 @@ struct CustomTabButton: View {
         .environmentObject(AuthManager())
         .environmentObject(BrewRecordStore())
         .environmentObject(CoffeeBeanManager())
+        .environmentObject(PurchaseManager())
 }
 
 

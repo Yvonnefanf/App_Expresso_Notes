@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		18C7C0D02E154A8100609DD9 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18C7C0CF2E154A8100609DD9 /* StoreKit.framework */; };
 		A4549D0B2DAFD4A300A7C1DE /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A4549D0A2DAFD4A300A7C1DE /* FirebaseAuth */; };
 		A4549D0D2DAFD4A300A7C1DE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A4549D0C2DAFD4A300A7C1DE /* FirebaseCore */; };
 		A4549D0F2DAFD4A300A7C1DE /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A4549D0E2DAFD4A300A7C1DE /* FirebaseFirestore */; };
@@ -30,6 +31,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		18C7C0CF2E154A8100609DD9 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		A49AE5362D92B8AC0001D7B7 /* Expresso Notes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Expresso Notes.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A49AE5462D92B8AD0001D7B7 /* Expresso NotesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Expresso NotesTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A49AE5502D92B8AD0001D7B7 /* Expresso NotesUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Expresso NotesUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -61,6 +63,7 @@
 				A4549D0D2DAFD4A300A7C1DE /* FirebaseCore in Frameworks */,
 				A4549D0B2DAFD4A300A7C1DE /* FirebaseAuth in Frameworks */,
 				A4549D0F2DAFD4A300A7C1DE /* FirebaseFirestore in Frameworks */,
+				18C7C0D02E154A8100609DD9 /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,12 +84,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		18C7C0CE2E154A8100609DD9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				18C7C0CF2E154A8100609DD9 /* StoreKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		A49AE52D2D92B8AC0001D7B7 = {
 			isa = PBXGroup;
 			children = (
 				A49AE5382D92B8AC0001D7B7 /* Expresso Notes */,
 				A49AE5492D92B8AD0001D7B7 /* Expresso NotesTests */,
 				A49AE5532D92B8AD0001D7B7 /* Expresso NotesUITests */,
+				18C7C0CE2E154A8100609DD9 /* Frameworks */,
 				A49AE5372D92B8AC0001D7B7 /* Products */,
 			);
 			sourceTree = "<group>";

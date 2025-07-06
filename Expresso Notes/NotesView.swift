@@ -113,8 +113,7 @@ struct NotesView: View {
                                                         .foregroundColor(roastLevelColor(for: roastLevel))
                                                 }
                                                 
-                                                MixedFontText(content: beanName, fontSize: 14)
-                                                    .foregroundColor(selectedBeanName == beanName ? .white : titleColor)
+                                                MixedFontText(content: beanName, fontSize: 14, color: selectedBeanName == beanName ? .white : titleColor)
                                             }
                                             .padding(.horizontal, 12)
                                             .padding(.vertical, 6)
@@ -131,7 +130,7 @@ struct NotesView: View {
                             }
                             .padding(.top, 16)
                             .padding(.bottom, 12)
-                            .background(Color.white)
+                            .background(Color(red: 1, green: 1, blue: 1)) // 强制白色背景，不受夜间模式影响
                         }
                         
                         // 记录列表
@@ -242,8 +241,7 @@ struct BrewRecordRow: View {
                             .foregroundColor(.yellow)
                             .font(.caption)
                         
-                        Text("最佳")
-                            .font(.caption)
+                        MixedFontText(content: "最佳", fontSize: 12)
                             .fontWeight(.bold)
                             .foregroundColor(Color.theme.textColor)
                     }
@@ -307,7 +305,7 @@ struct BrewRecordRow: View {
                         .foregroundColor(.brown)
                         .font(.caption)
                     
-                    MixedFontText(content: "\(record.grindSize)", fontSize: 12)
+                    MixedFontText(content: String(format: "%.1f", record.grindSize), fontSize: 12)
                         .foregroundColor(.secondary)
                 }
             }

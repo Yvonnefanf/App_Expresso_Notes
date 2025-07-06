@@ -9,7 +9,7 @@ struct BrewRecord: Identifiable, Codable {
     var coffeeBean: CoffeeBeanReference? // 添加咖啡豆引用
     var coffeeWeight: String
     var waterTemperature: Int
-    var grindSize: Int
+    var grindSize: Double
     var preInfusionTime: String
     var extractionTime: String
     var yieldAmount: String
@@ -182,7 +182,7 @@ class BrewRecordStore: ObservableObject {
                 coffeeBean: testBean1,
                 coffeeWeight: "18",
                 waterTemperature: 92,
-                grindSize: 4,
+                grindSize: 4.5,
                 preInfusionTime: "30",
                 extractionTime: "120",
                 yieldAmount: "36",
@@ -194,7 +194,7 @@ class BrewRecordStore: ObservableObject {
                 coffeeBean: testBean1,
                 coffeeWeight: "18",
                 waterTemperature: 90,
-                grindSize: 5,
+                grindSize: 5.2,
                 preInfusionTime: "25",
                 extractionTime: "110",
                 yieldAmount: "35",
@@ -206,7 +206,7 @@ class BrewRecordStore: ObservableObject {
                 coffeeBean: testBean2,
                 coffeeWeight: "20",
                 waterTemperature: 88,
-                grindSize: 3,
+                grindSize: 3.8,
                 preInfusionTime: "35",
                 extractionTime: "130",
                 yieldAmount: "40",
@@ -218,7 +218,7 @@ class BrewRecordStore: ObservableObject {
                 coffeeBean: testBean2,
                 coffeeWeight: "20",
                 waterTemperature: 85,
-                grindSize: 4,
+                grindSize: 4.1,
                 preInfusionTime: "30",
                 extractionTime: "125",
                 yieldAmount: "38",
@@ -270,7 +270,7 @@ class BrewRecordStore: ObservableObject {
 struct BestParameters {
     let coffeeWeight: String
     let waterTemperature: Int
-    let grindSize: Int
+    let grindSize: Double
     let preInfusionTime: String
     let extractionTime: String
     let yieldAmount: String

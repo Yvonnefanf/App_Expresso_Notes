@@ -13,6 +13,7 @@ struct Expresso_NotesApp: App {
     @StateObject private var authManager = AuthManager()
     @StateObject private var brewRecordStore = BrewRecordStore()
     @StateObject private var beanManager = CoffeeBeanManager()
+    @StateObject private var purchaseManager = PurchaseManager()
     
     init() {
         FirebaseApp.configure()
@@ -34,6 +35,8 @@ struct Expresso_NotesApp: App {
                     .environmentObject(authManager)
                     .environmentObject(brewRecordStore)
                     .environmentObject(beanManager)   // ← 把同一个 beanManager 放到环境里
+                    .environmentObject(purchaseManager)  // ← 添加购买管理器
+                    .preferredColorScheme(.light)  // 强制使用白天模式，不受系统夜间模式影响
             }
         }
     }

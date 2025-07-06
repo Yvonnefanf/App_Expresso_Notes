@@ -53,6 +53,7 @@ class CoffeeBeanManager: ObservableObject {
 
 struct CoffeeBeanView: View {
     @EnvironmentObject var beanManager: CoffeeBeanManager
+    @EnvironmentObject var brewRecordStore: BrewRecordStore
     @State private var showingAddSheet = false
     @Environment(\.presentationMode) var presentationMode
     
@@ -68,7 +69,10 @@ struct CoffeeBeanView: View {
                 LazyVGrid(columns: gridItems, spacing: 15) {
                     // 显示已有的咖啡豆卡片，放在前面
                     ForEach(beanManager.coffeeBeans) { bean in
-                        NavigationLink(destination: CoffeeBeanDetailView(coffeeBean: bean)) {
+                        NavigationLink(destination: CoffeeBeanDetailView(coffeeBean: bean)
+                            .environmentObject(beanManager)
+                            .environmentObject(brewRecordStore)
+                        ) {
                             CoffeeBeanCard(coffeeBean: bean)
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -98,22 +102,14 @@ struct CoffeeBeanView: View {
                                           .padding(.top, 16)
                               }
 
-                        // 右侧按钮
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button(action: {
+                        // 左侧返回按钮
+                        ToolbarItem(placement: .cancellationAction) {
+                            BackButton(action: {
                                 // 先发送通知切换到主页
                                 NotificationCenter.default.post(name: .switchToTab, object: 0)
                                 // 关闭当前视图
                                 presentationMode.wrappedValue.dismiss()
-                            }) {
-                                Image(systemName: "chevron.backward")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 20, height: 20) // 👈 控制大小
-                                    .fontWeight(.bold)
-                                    .foregroundColor(Color.theme.iconColor)
-                                    .padding(.top, 16)
-                            }
+                            })
                         }
                     }
             
@@ -203,15 +199,16 @@ struct AddCoffeeBeanView: View {
     @State private var roastLevel = CoffeeBean.RoastLevel.medium
     @State private var flavors = ""
     
-    let flavorSuggestions = ["柑橘", "巧克力", "坚果", "花香", "浆果", "焦糖", "水果", "清新", "醇厚"]
+    let flavorSuggestions = ["柑橘", "巧克力", "坚果", "花香", "浆果", "焦糖", "水果", "清新", "醇厚", "牛奶", "烟草"]
     
     var body: some View {
         NavigationView {
+            ScrollView {
             VStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 24) {
                     // 基本信息
-                    parameterInputField(title: "咖啡豆名字", binding: $name, placeholder: "输入咖啡豆名字", required: true, showError: false)
-                    parameterInputField(title: "品牌", binding: $brand, placeholder: "输入品牌", required: true, showError: false)
+                    parameterInputField(title: "咖啡豆名字", binding: $name, placeholder: "输入咖啡豆名称", required: true, showError: false)
+                    parameterInputField(title: "品牌", binding: $brand, placeholder: "输入品牌", required: false, showError: false)
                     
                     // 详细信息（可选）
                     parameterInputField(title: "品种", binding: $variety, placeholder: "输入品种", required: false, showError: false)
@@ -240,10 +237,10 @@ struct AddCoffeeBeanView: View {
                         MixedFontText(content: "口感", fontSize: 18)
                             .foregroundColor(Color.theme.textColor)
                         
-                        parameterInputField(title: "", binding: $flavors, placeholder: "口感特点，用逗号分隔", required: false, showError: false, labelWidth: 0)
+                        parameterInputField(title: "", binding: $flavors, placeholder: "口感特点", required: false, showError: false, labelWidth: 0)
                         
                         ScrollView(.horizontal, showsIndicators: false) {
-                            HStack {
+                            HStack(spacing: 8) {
                                 ForEach(flavorSuggestions, id: \.self) { flavor in
                                     Button(action: {
                                         if flavors.isEmpty {
@@ -258,9 +255,12 @@ struct AddCoffeeBeanView: View {
                                             .background(Color.theme.themeColor.opacity(0.5))
                                             .cornerRadius(15)
                                     }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
+                            .padding(.horizontal, 16)
                         }
+                        .frame(height: 35)
                         .padding(.vertical, 5)
                     }
                 }
@@ -277,8 +277,13 @@ struct AddCoffeeBeanView: View {
                         .cornerRadius(25)
                         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
                 }
-                .disabled(name.isEmpty || brand.isEmpty)
+                .disabled(name.isEmpty)
                 .padding(.vertical, 20)
+                }
+            }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .onTapGesture {
+                hideKeyboard()
             }
 //            .navigationTitle("添加咖啡豆")
             .navigationBarTitleDisplayMode(.inline) // 设置为中间小标题模式
@@ -287,7 +292,7 @@ struct AddCoffeeBeanView: View {
                     HStack(spacing: 8) {
 
                                 Text("添加咖啡豆")
-                                    .font(.custom("Slideqiuhong", size: 30))
+                                    .font(.custom("Slideqiuhong", size: 24))
                                     .fontWeight(.bold).foregroundColor(Color.theme.textColorForTitle)
                             }
                             .foregroundColor(.primary)
@@ -324,6 +329,10 @@ struct AddCoffeeBeanView: View {
         beanManager.addCoffeeBean(newBean)
         presentationMode.wrappedValue.dismiss()
     }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
 }
 
 
@@ -331,4 +340,5 @@ struct AddCoffeeBeanView: View {
 #Preview {
     CoffeeBeanView()
         .environmentObject(CoffeeBeanManager())
+        .environmentObject(BrewRecordStore())
 }

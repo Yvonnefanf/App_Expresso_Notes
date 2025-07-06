@@ -24,70 +24,76 @@ struct CoffeeBeanDetailView: View {
         }
     }
     
-    // 获取最佳参数
-    private var bestParameters: BestParameters? {
-        brewRecordStore.getBestParametersForCoffeeBean(coffeeBean.id)
-    }
-    
-    // 获取统计信息
-    private var statistics: CoffeeBeanStatistics? {
-        brewRecordStore.getStatisticsForCoffeeBean(coffeeBean.id)
-    }
+    // 使用State变量来存储数据
+    @State private var bestParameters: BestParameters?
+    @State private var statistics: CoffeeBeanStatistics?
     
     var body: some View {
         ScrollView {
-            // MARK: - 咖啡豆名称
+                        // MARK: - 咖啡豆信息
             VStack(alignment: .leading, spacing: 20) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top) {
+                    // 左侧所有信息
+                    VStack(alignment: .leading, spacing: 8) {
+                        // 名称
                         MixedFontText(content: coffeeBean.name, fontSize: 24)
                             .bold()
                         
+                        // 品牌
                         MixedFontText(content: coffeeBean.brand, fontSize: 20)
                             .foregroundColor(.secondary)
+                        
+                        // 烘焙度
+                        HStack(spacing: 6) {
+                            Circle()
+                                .frame(width: 8, height: 8)
+                                .foregroundColor(roastLevelColor(for: coffeeBean.roastLevel.rawValue))
+                            
+                            MixedFontText(content: coffeeBean.roastLevel.rawValue)
+                        }
+                        
+                        // 品种
+                        if !coffeeBean.variety.isEmpty {
+                            detailSection(title: "品种:", value: coffeeBean.variety)
+                        }
+                        
+                        // 产地
+                        if !coffeeBean.origin.isEmpty {
+                            detailSection(title: "产地:", value: coffeeBean.origin)
+                        }
+                        
+                        // 处理方式
+                        if !coffeeBean.processingMethod.isEmpty {
+                            detailSection(title: "处理方式:", value: coffeeBean.processingMethod)
+                        }
+                        
+                        // 口感
+                        if !coffeeBean.flavors.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                MixedFontText(content: "口感:", fontSize: 18)
+                                    .font(.headline)
+                                
+                                FlowLayout(alignment: .leading, spacing: 8) {
+                                    ForEach(coffeeBean.flavors, id: \.self) { flavor in
+                                        MixedFontText(content: flavor, fontSize: 14)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 6)
+                                            .background(Color(red: 0.96, green: 0.93, blue: 0.88))
+                                            .cornerRadius(15)
+                                    }
+                                }
+                            }
+                        }
                     }
                     
                     Spacer()
                     
-                    // 显示烘焙度图片
+                    // 右侧图片
                     Image(roastImage)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 70, height: 90)
-                }.padding(.leading, 20).padding(.trailing, 20)
-                
-                Divider()
-                // MARK: - 咖啡豆基本信息
-                VStack(alignment: .leading){
-                    if !coffeeBean.variety.isEmpty {
-                        detailSection(title: "品种:", value: coffeeBean.variety)
-                    }
-                    
-                    if !coffeeBean.origin.isEmpty {
-                        detailSection(title: "产地:", value: coffeeBean.origin)
-                    }
-                    
-                    if !coffeeBean.processingMethod.isEmpty {
-                        detailSection(title: "处理方式:", value: coffeeBean.processingMethod)
-                    }
-                    
-                    detailSection(title: "烘焙度:", value: coffeeBean.roastLevel.rawValue)
-                    
-                    if !coffeeBean.flavors.isEmpty {
-                        MixedFontText(content: "口感:", fontSize: 18)
-                            .font(.headline)
-                        
-                        FlowLayout(alignment: .leading, spacing: 8) {
-                            ForEach(coffeeBean.flavors, id: \.self) { flavor in
-                                MixedFontText(content: flavor, fontSize: 14)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(Color(red: 0.96, green: 0.93, blue: 0.88))
-                                    .cornerRadius(15)
-                            }
-                        }
-                    }
-                }.padding(.leading, 20).padding(.trailing, 20)
+                        .frame(width: 70)
+                }.padding(.horizontal, 20)
                 
                 
                 // MARK: - 咖啡豆 萃取统计信息
@@ -100,11 +106,12 @@ struct CoffeeBeanDetailView: View {
                         
                         HStack(spacing: 16) {
                             
-                            DataCard(title: "总记录", value: "\(stats.totalRecords)")
+                            DataCard(title: "总次数", value: "\(stats.totalRecords)")
                             DataCard(title: "平均评分", value: String(format: "%.1f", stats.averageRating))
                             DataCard(title: "最高评分", value: String(format: "%.1f", stats.bestRating))
                         }
                     }
+                    .padding(.horizontal, 20)
                     .background(Color.theme.backgroundColor)
                     .cornerRadius(12)
                 }
@@ -132,12 +139,12 @@ struct CoffeeBeanDetailView: View {
                             }
                         }
                         
-                        MixedFontText(content: "基于 \(formatDate(bestParams.date)) 的记录", fontSize: 14, color:.secondary )
+
                         
                         // 关键参数卡片
                         HStack(spacing: 12) {
                             DataCard(title: "粉水比", value: bestParams.ratio)
-                            DataCard(title: "研磨度", value: "\(bestParams.grindSize)")
+                            DataCard(title: "研磨度", value: String(format: "%.1f", bestParams.grindSize))
                             DataCard(title: "水温", value: "\(bestParams.waterTemperature)°C")
                         }.padding(.top, 8)
                         
@@ -145,16 +152,16 @@ struct CoffeeBeanDetailView: View {
                         VStack(spacing: 8) {
                             DataRow(title: "咖啡粉重量", value: "\(bestParams.coffeeWeight) g")
                             DataRow(title: "出液量", value: "\(bestParams.yieldAmount) g")
-                            DataRow(title: "萃取时间", value: "\(bestParams.extractionTime) 秒")
+                            DataRow(title: "萃取时间", value: "\(bestParams.extractionTime) s")
                             
                             if !bestParams.preInfusionTime.isEmpty {
-                                DataRow(title: "预浸泡时间", value: "\(bestParams.preInfusionTime) 秒")
+                                DataRow(title: "预浸泡时间", value: "\(bestParams.preInfusionTime) s")
                             }
                         }
                         .padding(.top, 8).padding(.leading, 20).padding(.trailing, 20)
                     }
                     .padding(.vertical, 16)
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 20)
                     .background(Color.theme.backgroundColor)
                     .cornerRadius(12)
                 }
@@ -163,6 +170,11 @@ struct CoffeeBeanDetailView: View {
             }
             .padding()
         }
+        .onAppear {
+            // 在视图出现时加载数据
+            bestParameters = brewRecordStore.getBestParametersForCoffeeBean(coffeeBean.id)
+            statistics = brewRecordStore.getStatisticsForCoffeeBean(coffeeBean.id)
+        }
 
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -170,7 +182,7 @@ struct CoffeeBeanDetailView: View {
                 HStack(spacing: 8) {
                     
                     Text("咖啡豆详情")
-                        .font(.custom("Slideqiuhong", size: 30))
+                        .font(.custom("Slideqiuhong", size: 24))
                         .fontWeight(.bold).foregroundColor(Color.theme.textColorForTitle)
                 }
                 .foregroundColor(.primary)
@@ -190,15 +202,28 @@ struct CoffeeBeanDetailView: View {
     }
     
     private func detailSection(title: String, value: String) -> some View {
-        HStack(alignment: .top) {
-            MixedFontText(content: title, fontSize: 18)
-                .font(.headline)
-                .frame(width: 80, alignment: .leading)
+        HStack(spacing: 8) {
+            MixedFontText(content: title, fontSize: 16)
+                .foregroundColor(.secondary)
             
             MixedFontText(content: value, fontSize: 16)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Spacer()
         }
-        .padding(.bottom, 8)
+    }
+    
+    // 根据烘焙程度返回颜色
+    private func roastLevelColor(for roastLevel: String) -> Color {
+        switch roastLevel {
+        case "浅焙":
+            return .green
+        case "中焙":
+            return .blue
+        case "深焙":
+            return .red
+        default:
+            return .gray
+        }
     }
 }
 

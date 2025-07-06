@@ -4,6 +4,7 @@ struct BrewRecordView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var brewRecordStore: BrewRecordStore
     @EnvironmentObject var beanManager: CoffeeBeanManager
+    @EnvironmentObject var purchaseManager: PurchaseManager
     
     @State private var selectedCoffeeBean: CoffeeBean?
     @State private var coffeeWeight: String = ""
@@ -17,6 +18,7 @@ struct BrewRecordView: View {
     @State private var showRatingPopup = false
     @State private var tempRecord: BrewRecord? = nil
     @State private var showCoffeeBeanPicker = false
+    @State private var showPurchasePopup = false
     
     // MARK: - 校验状态
     // 输入校验状态
@@ -30,7 +32,7 @@ struct BrewRecordView: View {
         NavigationView {
             
             ZStack {
-                Color.white.ignoresSafeArea()
+                Color(red: 1, green: 1, blue: 1).ignoresSafeArea() // 强制白色背景，不受夜间模式影响
                 
                 ScrollView {
                     VStack(spacing: 24) {
@@ -53,7 +55,7 @@ struct BrewRecordView: View {
                         
                         VStack(alignment: .leading, spacing: 24) {
                             // 咖啡粉重量
-                            parameterInputField(title: "咖啡粉重量(g)", binding: $coffeeWeight, placeholder: "输入重量", required: true, showError: showErrorCoffeeWeight)
+                            parameterInputField(title: "咖啡粉重量(g)", binding: $coffeeWeight, placeholder: "输入重量", required: true, showError: showErrorCoffeeWeight, keyboardType: .decimalPad)
                             
                             // 水温
                             HStack(alignment: .center) {
@@ -80,16 +82,16 @@ struct BrewRecordView: View {
                             }
                             
                             // 研磨度
-                            parameterInputField(title: "研磨度", binding: $grindSize, placeholder: "输入研磨度", required: true, showError: showErrorGrindSize)
+                            parameterInputField(title: "研磨度", binding: $grindSize, placeholder: "输入研磨度", required: true, showError: showErrorGrindSize, keyboardType: .decimalPad)
                             
                             // 预浸泡时间
-                            parameterInputField(title: "预浸泡时间(s)", binding: $preInfusionTime, placeholder: "输入时间", required: false, showError: false)
+                            parameterInputField(title: "预浸泡时间(s)", binding: $preInfusionTime, placeholder: "输入时间", required: false, showError: false, keyboardType: .numberPad)
                             
                             // 萃取时间
-                            parameterInputField(title: "萃取时间(s)", binding: $extractionTime, placeholder: "输入时间", required: true, showError: showErrorExtractionTime)
+                            parameterInputField(title: "萃取时间(s)", binding: $extractionTime, placeholder: "输入时间", required: true, showError: showErrorExtractionTime, keyboardType: .numberPad)
                             
                             // 出液量
-                            parameterInputField(title: "出液量(g)", binding: $yieldAmount, placeholder: "输入出液量", required: true, showError: showErrorYieldAmount)
+                            parameterInputField(title: "出液量(g)", binding: $yieldAmount, placeholder: "输入出液量", required: true, showError: showErrorYieldAmount, keyboardType: .decimalPad)
                         }
                         
                         // 保存按钮始终可点
@@ -146,12 +148,25 @@ struct BrewRecordView: View {
                     ratingPopupView
                         .transition(.scale)
                 }
+                
+                // 购买弹窗覆盖层
+                if showPurchasePopup {
+                    Color.black.opacity(0.3)
+                        .edgesIgnoringSafeArea(.all)
+                        .onTapGesture {} // 防止点击背景关闭
+                    
+                    purchasePopupView
+                        .transition(.scale)
+                        .zIndex(1000)
+                }
             }
             .onTapGesture {
                 hideKeyboard()
             }
             .animation(.easeInOut, value: showRatingPopup)
+        .animation(.easeInOut, value: showPurchasePopup)
         }
+        .preferredColorScheme(.light)  // 强制使用白天模式，不受系统夜间模式影响
     }
     
     // MARK: - 评分
@@ -211,7 +226,7 @@ struct BrewRecordView: View {
                             .foregroundColor(Color.theme.textColor)
                             .frame(minHeight: 100)
                             .padding(4)
-                            .background(Color.white)
+                            .background(Color(red: 1, green: 1, blue: 1)) // 强制白色背景
                             .cornerRadius(8)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
@@ -238,7 +253,7 @@ struct BrewRecordView: View {
             .padding()
         }
         .frame(maxHeight: UIScreen.main.bounds.height * 0.5)
-        .background(Color.white)
+        .background(Color(red: 1, green: 1, blue: 1)) // 强制白色背景
         .cornerRadius(16)
         .shadow(radius: 10)
         .padding(.horizontal, 24)
@@ -276,7 +291,7 @@ struct BrewRecordView: View {
                                 .foregroundColor(.gray)
                         }
                         .padding()
-                        .background(Color.white)
+                        .background(Color(red: 1, green: 1, blue: 1)) // 强制白色背景
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
@@ -329,14 +344,14 @@ struct BrewRecordView: View {
     // 准备记录并显示评分弹窗
     func prepareRecord() {
         // 创建临时记录
-        let grindSizeInt = Int(grindSize) ?? 4
+        let grindSizeDouble = Double(grindSize) ?? 4.0
         
         tempRecord = BrewRecord(
             date: Date(),
             coffeeBean: selectedCoffeeBean != nil ? CoffeeBeanReference(from: selectedCoffeeBean!) : nil,
             coffeeWeight: coffeeWeight,
             waterTemperature: Int(waterTemperature),
-            grindSize: grindSizeInt,
+            grindSize: grindSizeDouble,
             preInfusionTime: preInfusionTime,
             extractionTime: extractionTime,
             yieldAmount: yieldAmount
@@ -349,9 +364,22 @@ struct BrewRecordView: View {
     // 保存带评分的记录
     func saveRecordWithRating() {
         guard var record = tempRecord else { return }
+        
+        // 检查是否需要购买
+        if !purchaseManager.canCreateNewRecord {
+            showRatingPopup = false
+            showPurchasePopup = true
+            return
+        }
+        
         record.rating = rating
         record.ratingDescription = ratingDescription.isEmpty ? nil : ratingDescription
         brewRecordStore.addRecord(record)
+        
+        // 使用免费机会（如果未解锁）
+        if !purchaseManager.isUnlocked {
+            purchaseManager.useFreeAttempt()
+        }
         
         // 短暂延迟后关闭表单，使评分弹窗消失动画有时间完成
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -388,6 +416,149 @@ struct BrewRecordView: View {
             return ""
         }
     }
+    
+    // MARK: - 购买弹窗视图
+    private var purchasePopupView: some View {
+        VStack(spacing: 24) {
+            // 标题
+            VStack(spacing: 8) {
+                Image("nobgbean")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 60, height: 60)
+                
+                Text("解锁完整版")
+                    .font(.custom("Slideqiuhong", size: 24))
+                    .fontWeight(.bold)
+                    .foregroundColor(Color.theme.textColor)
+            }
+            
+            // 说明文字
+            VStack(spacing: 12) {
+                Text("您已使用完 3 次免费记录机会")
+                    .font(.custom("平方江南体", size: 16))
+                    .foregroundColor(Color.theme.textColor)
+                    .multilineTextAlignment(.center)
+                
+                Text("购买完整版获得：")
+                    .font(.custom("平方江南体", size: 14))
+                    .foregroundColor(Color.theme.textColor.opacity(0.7))
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("无限制创建萃取记录")
+                            .font(.custom("平方江南体", size: 14))
+                            .foregroundColor(Color.theme.textColor)
+                    }
+                    
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("永久保存所有数据")
+                            .font(.custom("平方江南体", size: 14))
+                            .foregroundColor(Color.theme.textColor)
+                    }
+                    
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("一次购买，终身使用")
+                            .font(.custom("平方江南体", size: 14))
+                            .foregroundColor(Color.theme.textColor)
+                    }
+                }
+                .padding(.leading, 16)
+            }
+            
+            // 价格信息
+            if let product = purchaseManager.products.first {
+                VStack(spacing: 4) {
+                    Text(product.displayPrice)
+                        .font(.custom("umeboshi", size: 28))
+                        .fontWeight(.bold)
+                        .foregroundColor(Color.theme.textColor)
+                    
+                    Text("一次性购买")
+                        .font(.custom("平方江南体", size: 12))
+                        .foregroundColor(Color.theme.textColor.opacity(0.6))
+                }
+            }
+            
+            // 按钮组
+            VStack(spacing: 16) {
+                // 购买按钮
+                Button(action: {
+                    Task {
+                        await purchaseManager.purchaseUnlock()
+                        if purchaseManager.isUnlocked {
+                            showPurchasePopup = false
+                            // 自动保存记录
+                            saveRecordWithRating()
+                        }
+                    }
+                }) {
+                    HStack {
+                        if case .purchasing = purchaseManager.purchaseStatus {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                                .foregroundColor(Color.theme.textColor)
+                        }
+                        Text(purchaseButtonText)
+                            .font(.custom("平方江南体", size: 16))
+                            .fontWeight(.medium)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.theme.buttonColor)
+                    .foregroundColor(Color.theme.textColor)
+                    .cornerRadius(25)
+                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
+                }
+                .disabled(isPurchasing)
+                
+                // 取消按钮
+                Button(action: {
+                    showPurchasePopup = false
+                }) {
+                    Text("暂不购买")
+                        .font(.custom("平方江南体", size: 16))
+                        .foregroundColor(Color.theme.textColor.opacity(0.6))
+                }
+            }
+        }
+        .padding(24)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+        .padding(.horizontal, 40)
+    }
+    
+    // MARK: - 计算属性
+    private var purchaseButtonText: String {
+        if case .purchasing = purchaseManager.purchaseStatus {
+            return "购买中..."
+        } else {
+            return "立即购买"
+        }
+    }
+    
+    private var isPurchasing: Bool {
+        if case .purchasing = purchaseManager.purchaseStatus {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    private var isLoading: Bool {
+        if case .loading = purchaseManager.purchaseStatus {
+            return true
+        } else {
+            return false
+        }
+    }
 }
 
 // 咖啡豆选择器视图
@@ -413,8 +584,8 @@ struct CoffeeBeanPickerView: View {
     var body: some View {
         NavigationView {
             ZStack {
-//                Color.white.ignoresSafeArea() // 强制白色背景，不受夜间模式影响
-                Color.theme.backgroundColor.edgesIgnoringSafeArea(.all)
+                Color(red: 1, green: 1, blue: 1).ignoresSafeArea() // 强制白色背景，不受夜间模式影响
+                // Color.theme.backgroundColor.edgesIgnoringSafeArea(.all)
                 
 //
                 List {
@@ -497,5 +668,6 @@ struct BrewRecordView_Previews: PreviewProvider {
         BrewRecordView()
             .environmentObject(BrewRecordStore())
             .environmentObject(CoffeeBeanManager())
+            .environmentObject(PurchaseManager())
     }
 } 

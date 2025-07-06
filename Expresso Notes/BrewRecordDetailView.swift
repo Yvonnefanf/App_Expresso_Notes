@@ -2,8 +2,12 @@ import SwiftUI
 
 struct BrewRecordDetailView: View {
     let record: BrewRecord
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
+        ZStack {
+            Color(red: 1, green: 1, blue: 1).ignoresSafeArea() // 强制白色背景，不受夜间模式影响
+            
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // 头部信息
@@ -12,12 +16,10 @@ struct BrewRecordDetailView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal)
-                // 咖啡豆信息
+                
+                // 咖啡豆信息 - 调整到第二位
                 if let bean = record.coffeeBean {
                     VStack(alignment: .leading, spacing: 20) {
-//                        Text("咖啡豆")
-//                            .font(.headline)
-//                            .foregroundColor(.secondary)
                         HStack(spacing: 0) {
                             // 烘焙度图片
                             Image(getRoastImage(for: bean.roastLevel))
@@ -34,22 +36,51 @@ struct BrewRecordDetailView: View {
                                     content: bean.brand, fontSize: 18, color: Color.theme.textColor.opacity(0.7)
                                 )
                                 
+                                HStack(spacing: 6) {
+                                    Circle()
+                                        .frame(width: 8, height: 8)
+                                        .foregroundColor(roastLevelColor(for: bean.roastLevel))
+                                
                                 MixedFontText(content: bean.roastLevel)
+                                }
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 2)
                                     .background(Color.theme.themeColor2.opacity(0.5))
                                     .cornerRadius(4)
                             }
+                            
+                            Spacer() // 确保内容居左
                         }
                     }
                     .padding(.horizontal)
                     .padding(.vertical, 16)
-                    .frame(maxWidth: .infinity)
-                    .background(Color(UIColor.systemBackground))
-                    .cornerRadius(10)
-                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                    .frame(maxWidth: .infinity, alignment: .leading) // 居左对齐
+                    .background(Color(red: 1, green: 1, blue: 1)) // 强制白色背景
+                    .cornerRadius(10) // 移除shadow
                     .padding(.horizontal)
                 }
+                
+                // 关键数据概览 - 调整到第三位
+                HStack(spacing: 20) {
+                    DataCard(title: "粉水比", value: record.ratio)
+                    DataCard(title: "研磨度", value: String(format: "%.1f", record.grindSize))
+                    DataCard(title: "水温", value: "\(record.waterTemperature)°C")
+                }
+                .padding(.horizontal).padding(.top, 20)
+                
+                // 详细数据
+                Group {
+                    DataRow(title: "咖啡粉重量", value: "\(record.coffeeWeight) g")
+                    DataRow(title: "出液量", value: "\(record.yieldAmount) g")
+                    DataRow(title: "萃取时间", value: "\(record.extractionTime) s")
+                    
+                    if !record.preInfusionTime.isEmpty {
+                        DataRow(title: "预浸泡时间", value: "\(record.preInfusionTime) s")
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.leading, 20)
+                .padding(.trailing, 20)
                 
                 // 评分
                 if let rating = record.rating {
@@ -65,7 +96,7 @@ struct BrewRecordDetailView: View {
                             ZStack(alignment: .leading) {
                                 Rectangle()
                                     .frame(height: 10)
-                                    .foregroundColor(Color(UIColor.systemGray5))
+                                    .foregroundColor(Color(red: 0.9, green: 0.9, blue: 0.9)) // 固定浅灰色，不受夜间模式影响
                                     .cornerRadius(6)
                                 
                                 Rectangle()
@@ -83,10 +114,7 @@ struct BrewRecordDetailView: View {
                         // 个人评价
                         if let description = record.ratingDescription, !description.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
-                                MixedFontText(content: "📒🖊️: " + description )
-//                                Text("详细描述: " + description)
-//                                    .font(.headline)
-//                                    .foregroundColor(.secondary)
+                                MixedFontText(content: description) // 移除emoji，直接显示内容
                                     .padding(.top, 12)
                             }
                         }
@@ -95,61 +123,35 @@ struct BrewRecordDetailView: View {
                     .padding(.vertical, 16)
                     .padding(.leading, 20)
                     .padding(.trailing, 20)
-                    .background(Color.theme.backgroundColor)
+                    .background(Color(red: 1, green: 1, blue: 1)) // 强制白色背景
                     .cornerRadius(10)
                     .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
                     .padding(.horizontal)
                     
                 }
-                
-//                // 分割线
-//                Divider()
-                
-                // 关键数据概览
-                HStack(spacing: 20) {
-                    DataCard(title: "粉水比", value: record.ratio)
-                    DataCard(title: "研磨度", value: "\(record.grindSize)")
-                    DataCard(title: "水温", value: "\(record.waterTemperature)°C")
-                }
-                .padding(.horizontal).padding(.top, 20)
-                
-                // 详细数据
-                Group {
-                    DataRow(title: "咖啡粉重量", value: "\(record.coffeeWeight) g")
-                    DataRow(title: "出液量", value: "\(record.yieldAmount) g")
-                    DataRow(title: "萃取时间", value: "\(record.extractionTime) 秒")
-                    
-                    if !record.preInfusionTime.isEmpty {
-                        DataRow(title: "预浸泡时间", value: "\(record.preInfusionTime) 秒")
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.leading, 20)
-                .padding(.trailing, 20)
         
                 
                 Spacer()
             }
             .padding(.vertical)
+            }
         }
 //        .navigationTitle("记录详情")
 //        .navigationBarTitleDisplayMode(.inline)
 //        
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
         .toolbar{
             ToolbarItem(placement: .principal){
                 Text("记录详情")
-                    .font(.custom("Slideqiuhong", size: 30))
+                    .font(.custom("Slideqiuhong", size: 24))
                     .fontWeight(.bold).foregroundColor(Color.theme.textColorForTitle)
             }
-            ToolbarItem(placement: .cancellationAction) {
-                    BackButton(action: {
-//                        dismiss()
-//                        // 发送通知切换到主页
-//                        NotificationCenter.default.post(name: .switchToTab, object: 0)
-                    })
-                }
-            
+            ToolbarItem(placement: .navigationBarLeading) {
+                BackButton(action: {
+                    presentationMode.wrappedValue.dismiss()
+                })
+            }
         }
             
         
@@ -206,6 +208,20 @@ struct BrewRecordDetailView: View {
             return "shenhong"
         default:
             return "zhonghong"
+        }
+    }
+    
+    // 根据烘焙程度返回颜色
+    private func roastLevelColor(for roastLevel: String) -> Color {
+        switch roastLevel {
+        case "浅焙":
+            return .green
+        case "中焙":
+            return .blue
+        case "深焙":
+            return .red
+        default:
+            return .gray
         }
     }
 }

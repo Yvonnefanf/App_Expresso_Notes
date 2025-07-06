@@ -6,10 +6,17 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 // 咖啡豆管理器 - 处理数据存储和加载
 class CoffeeBeanManager: ObservableObject {
     @Published var coffeeBeans: [CoffeeBean] = []
+    
+    // 获取当前用户的保存key
+    private var saveKey: String {
+        let userId = Auth.auth().currentUser?.uid ?? "anonymous"
+        return "coffeeBeans_\(userId)"
+    }
     
     init() {
         loadCoffeeBeans()
@@ -35,18 +42,28 @@ class CoffeeBeanManager: ObservableObject {
         return brewRecordStore.getRecordsForCoffeeBean(coffeeBeanId).count
     }
     
+    // 当用户切换时重新加载数据
+    func reloadForCurrentUser() {
+        loadCoffeeBeans()
+    }
+    
     private func saveCoffeeBeans() {
         // 这里暂时使用 UserDefaults，实际应用中可能需要连接到 Firebase
         if let encoded = try? JSONEncoder().encode(coffeeBeans) {
-            UserDefaults.standard.set(encoded, forKey: "coffeeBeans")
+            UserDefaults.standard.set(encoded, forKey: saveKey)
+            print("✅ 成功保存 \(coffeeBeans.count) 个咖啡豆 (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
         }
     }
     
     private func loadCoffeeBeans() {
         // 从 UserDefaults 加载数据
-        if let data = UserDefaults.standard.data(forKey: "coffeeBeans"),
+        if let data = UserDefaults.standard.data(forKey: saveKey),
            let decoded = try? JSONDecoder().decode([CoffeeBean].self, from: data) {
             coffeeBeans = decoded
+            print("✅ 成功加载 \(coffeeBeans.count) 个咖啡豆 (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
+        } else {
+            coffeeBeans = []
+            print("ℹ️ 没有找到保存的咖啡豆数据，初始化为空数组 (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
         }
     }
 }

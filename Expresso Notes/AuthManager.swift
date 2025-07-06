@@ -11,10 +11,22 @@ class AuthManager: ObservableObject {
     // 注册过程中的标志，用于避免跳转到主界面
     var isRegistering = false
     
+    // 数据管理器引用
+    weak var brewRecordStore: BrewRecordStore?
+    weak var beanManager: CoffeeBeanManager?
+    weak var purchaseManager: PurchaseManager?
+    
     init() {
         print("AuthManager 初始化")
         loadUserData()
         setupAuthListener()
+    }
+    
+    // 设置数据管理器引用
+    func setDataManagers(brewRecordStore: BrewRecordStore, beanManager: CoffeeBeanManager, purchaseManager: PurchaseManager) {
+        self.brewRecordStore = brewRecordStore
+        self.beanManager = beanManager
+        self.purchaseManager = purchaseManager
     }
     
     private func setupAuthListener() {
@@ -34,16 +46,31 @@ class AuthManager: ObservableObject {
                 self?.email = user.email ?? ""
                 // 检查是否是首次登录
                 self?.checkFirstLogin(userId: user.uid)
+                // 用户登录后重新加载数据
+                self?.reloadDataForCurrentUser()
             } else {
                 self?.email = ""
                 self?.username = ""
                 self?.isFirstLogin = false
+                // 用户登出后重新加载数据
+                self?.reloadDataForCurrentUser()
             }
         }
     }
     
+    // 重新加载当前用户的数据
+    private func reloadDataForCurrentUser() {
+        DispatchQueue.main.async {
+            self.brewRecordStore?.reloadForCurrentUser()
+            self.beanManager?.reloadForCurrentUser()
+            self.purchaseManager?.reloadForCurrentUser()
+        }
+    }
+    
     private func loadUserData() {
-        if let savedName = UserDefaults.standard.string(forKey: "username") {
+        let userId = Auth.auth().currentUser?.uid ?? "anonymous"
+        let userKey = "username_\(userId)"
+        if let savedName = UserDefaults.standard.string(forKey: userKey) {
             username = savedName
         }
     }
@@ -65,7 +92,9 @@ class AuthManager: ObservableObject {
     
     func updateUsername(_ newName: String) {
         username = newName
-        UserDefaults.standard.set(newName, forKey: "username")
+        let userId = Auth.auth().currentUser?.uid ?? "anonymous"
+        let userKey = "username_\(userId)"
+        UserDefaults.standard.set(newName, forKey: userKey)
     }
     
     func signOut() {
@@ -143,7 +172,7 @@ class AuthManager: ObservableObject {
                     self?.username = username
                     self?.isFirstLogin = false
                     // 保存用户名到UserDefaults
-                    UserDefaults.standard.set(username, forKey: "username")
+                    self?.updateUsername(username)
                 }
             }
         }

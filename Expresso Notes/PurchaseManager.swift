@@ -1,6 +1,7 @@
 import Foundation
 import StoreKit
 import Combine
+import FirebaseAuth
 
 @MainActor
 class PurchaseManager: NSObject, ObservableObject {
@@ -14,8 +15,17 @@ class PurchaseManager: NSObject, ObservableObject {
     // MARK: - Constants
     private let maxFreeUsage = 3
     private let productID = "com.twinplanet.ExpressoNotes.unlock"
-    private let freeUsageKey = "freeUsageCount"
-    private let unlockStatusKey = "isUnlocked"
+    
+    // 获取当前用户的保存key
+    private var freeUsageKey: String {
+        let userId = Auth.auth().currentUser?.uid ?? "anonymous"
+        return "freeUsageCount_\(userId)"
+    }
+    
+    private var unlockStatusKey: String {
+        let userId = Auth.auth().currentUser?.uid ?? "anonymous"
+        return "isUnlocked_\(userId)"
+    }
     
     // MARK: - Private Properties
     private var updateListenerTask: Task<Void, Error>?
@@ -44,6 +54,11 @@ class PurchaseManager: NSObject, ObservableObject {
     
     // MARK: - Public Methods
     
+    /// 当用户切换时重新加载数据
+    func reloadForCurrentUser() {
+        loadStoredData()
+    }
+    
     /// 检查是否可以创建新记录
     func checkCanCreateRecord() {
         if isUnlocked {
@@ -61,7 +76,7 @@ class PurchaseManager: NSObject, ObservableObject {
         saveStoredData()
         checkCanCreateRecord()
         
-        print("📱 使用免费机会: \(freeUsageCount)/\(maxFreeUsage)")
+        print("📱 使用免费机会: \(freeUsageCount)/\(maxFreeUsage) (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
     }
     
     /// 获取剩余免费次数
@@ -191,7 +206,7 @@ class PurchaseManager: NSObject, ObservableObject {
         isUnlocked = defaults.bool(forKey: unlockStatusKey)
         checkCanCreateRecord()
         
-        print("📱 加载存储数据 - 免费次数: \(freeUsageCount), 已解锁: \(isUnlocked)")
+        print("📱 加载存储数据 - 免费次数: \(freeUsageCount), 已解锁: \(isUnlocked) (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
     }
     
     private func saveStoredData() {
@@ -199,7 +214,7 @@ class PurchaseManager: NSObject, ObservableObject {
         defaults.set(freeUsageCount, forKey: freeUsageKey)
         defaults.set(isUnlocked, forKey: unlockStatusKey)
         
-        print("💾 保存数据 - 免费次数: \(freeUsageCount), 已解锁: \(isUnlocked)")
+        print("💾 保存数据 - 免费次数: \(freeUsageCount), 已解锁: \(isUnlocked) (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
     }
 }
 

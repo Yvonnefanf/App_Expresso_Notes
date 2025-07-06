@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		18C7C0D02E154A8100609DD9 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18C7C0CF2E154A8100609DD9 /* StoreKit.framework */; };
+		18C7C3712E1A103B00609DD9 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 18C7C3702E1A103B00609DD9 /* FirebaseDatabase */; };
+		18C7C3732E1A103B00609DD9 /* FirebaseFirestoreCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = 18C7C3722E1A103B00609DD9 /* FirebaseFirestoreCombine-Community */; };
 		A4549D0B2DAFD4A300A7C1DE /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A4549D0A2DAFD4A300A7C1DE /* FirebaseAuth */; };
 		A4549D0D2DAFD4A300A7C1DE /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A4549D0C2DAFD4A300A7C1DE /* FirebaseCore */; };
 		A4549D0F2DAFD4A300A7C1DE /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A4549D0E2DAFD4A300A7C1DE /* FirebaseFirestore */; };
@@ -60,8 +62,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				18C7C3712E1A103B00609DD9 /* FirebaseDatabase in Frameworks */,
 				A4549D0D2DAFD4A300A7C1DE /* FirebaseCore in Frameworks */,
 				A4549D0B2DAFD4A300A7C1DE /* FirebaseAuth in Frameworks */,
+				18C7C3732E1A103B00609DD9 /* FirebaseFirestoreCombine-Community in Frameworks */,
 				A4549D0F2DAFD4A300A7C1DE /* FirebaseFirestore in Frameworks */,
 				18C7C0D02E154A8100609DD9 /* StoreKit.framework in Frameworks */,
 			);
@@ -136,6 +140,8 @@
 				A4549D0A2DAFD4A300A7C1DE /* FirebaseAuth */,
 				A4549D0C2DAFD4A300A7C1DE /* FirebaseCore */,
 				A4549D0E2DAFD4A300A7C1DE /* FirebaseFirestore */,
+				18C7C3702E1A103B00609DD9 /* FirebaseDatabase */,
+				18C7C3722E1A103B00609DD9 /* FirebaseFirestoreCombine-Community */,
 			);
 			productName = "Expresso Notes";
 			productReference = A49AE5362D92B8AC0001D7B7 /* Expresso Notes.app */;
@@ -610,6 +616,14 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		18C7C3702E1A103B00609DD9 /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FirebaseDatabase;
+		};
+		18C7C3722E1A103B00609DD9 /* FirebaseFirestoreCombine-Community */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = "FirebaseFirestoreCombine-Community";
+		};
 		A4549D0A2DAFD4A300A7C1DE /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A4549D092DAFD4A300A7C1DE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

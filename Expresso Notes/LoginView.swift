@@ -3,8 +3,8 @@ import FirebaseAuth
 import FirebaseFirestore
 
 struct LoginView: View {
-    @State private var email = ""
-    @State private var password = ""
+    @State private var email = "e1322750@u.nus.edu"
+    @State private var password = "zyf1996"
     @State private var isRegistering: Bool
     @State private var errorMessage = ""
     @State private var verificationMessage = ""

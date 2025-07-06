@@ -120,6 +120,9 @@ struct ContentView: View {
                                 selectedTab = tabIndex
                             }
                         }
+                    
+                    // 设置AuthManager的数据管理器引用
+                    authManager.setDataManagers(brewRecordStore: brewRecordStore, beanManager: beanManager, purchaseManager: purchaseManager)
                 }
                 .onChange(of: authManager.isFirstLogin) { isFirstLogin in
                     if isFirstLogin {

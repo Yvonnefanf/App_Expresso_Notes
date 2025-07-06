@@ -51,8 +51,11 @@ struct CoffeeBeanReference: Codable, Identifiable {
 class BrewRecordStore: ObservableObject {
     @Published var records: [BrewRecord] = []
     
-    // 使用固定的key，不依赖用户登录状态
-    private let saveKey = "savedBrewRecords"
+    // 获取当前用户的保存key
+    private var saveKey: String {
+        let userId = Auth.auth().currentUser?.uid ?? "anonymous"
+        return "savedBrewRecords_\(userId)"
+    }
     
     init() {
         loadRecords()
@@ -158,6 +161,11 @@ class BrewRecordStore: ObservableObject {
         }.sorted { $0.bestRating > $1.bestRating } // 按最佳评分排序
     }
     
+    // 当用户切换时重新加载数据
+    func reloadForCurrentUser() {
+        loadRecords()
+    }
+    
     // 测试方法：添加测试记录
     func addTestRecord() {
         // 创建测试咖啡豆引用
@@ -243,7 +251,7 @@ class BrewRecordStore: ObservableObject {
         do {
             let encoded = try JSONEncoder().encode(records)
             UserDefaults.standard.set(encoded, forKey: saveKey)
-            print("✅ 成功保存 \(records.count) 条记录")
+            print("✅ 成功保存 \(records.count) 条记录 (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
         } catch {
             print("❌ 保存失败: \(error)")
         }
@@ -254,10 +262,10 @@ class BrewRecordStore: ObservableObject {
             if let savedData = UserDefaults.standard.data(forKey: saveKey) {
                 let decoded = try JSONDecoder().decode([BrewRecord].self, from: savedData)
                 records = decoded
-                print("✅ 成功加载 \(records.count) 条记录")
+                print("✅ 成功加载 \(records.count) 条记录 (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
             } else {
                 records = []
-                print("ℹ️ 没有找到保存的数据，初始化为空数组")
+                print("ℹ️ 没有找到保存的数据，初始化为空数组 (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
             }
         } catch {
             records = []

@@ -50,38 +50,51 @@ struct CoffeeBeanReference: Codable, Identifiable {
 
 class BrewRecordStore: ObservableObject {
     @Published var records: [BrewRecord] = []
-    
-    // 获取当前用户的保存key
-    private var saveKey: String {
-        let userId = Auth.auth().currentUser?.uid ?? "anonymous"
-        return "savedBrewRecords_\(userId)"
+    private let db = Firestore.firestore()
+    private var listener: ListenerRegistration?
+
+    private var userId: String? {
+        Auth.auth().currentUser?.uid
     }
-    
+
     init() {
-        loadRecords()
+        subscribe()
     }
-    
+
+    func subscribe() {
+        guard let userId = userId else { return }
+        listener?.remove()
+        listener = db.collection("users").document(userId).collection("brewRecords")
+            .order(by: "date", descending: true)
+            .addSnapshotListener { [weak self] snap, err in
+                guard let docs = snap?.documents else { return }
+                self?.records = docs.compactMap { doc in
+                    try? doc.data(as: BrewRecord.self)
+                }
+            }
+    }
+
     func addRecord(_ record: BrewRecord) {
-        records.append(record)
-        saveRecords()
-    }
-    
-    func deleteRecord(at indexSet: IndexSet) {
-        records.remove(atOffsets: indexSet)
-        saveRecords()
-    }
-    
-    // 根据记录ID删除记录
-    func deleteRecords(by ids: [UUID]) {
-        records.removeAll { record in
-            ids.contains(record.id)
+        guard let userId = userId else { return }
+        let doc = db.collection("users").document(userId).collection("brewRecords").document(record.id.uuidString)
+        do {
+            try doc.setData(from: record)
+        } catch {
+            print("❌ 保存 BrewRecord 失败: \(error)")
         }
-        saveRecords()
     }
-    
-    // 删除单个记录
+
     func deleteRecord(_ record: BrewRecord) {
-        deleteRecords(by: [record.id])
+        guard let userId = userId else { return }
+        db.collection("users").document(userId).collection("brewRecords").document(record.id.uuidString).delete { err in
+            if let err = err {
+                print("❌ 删除 BrewRecord 失败: \(err)")
+            }
+        }
+    }
+
+    deinit {
+        listener?.remove()
     }
     
     // 获取指定咖啡豆的所有记录
@@ -161,11 +174,6 @@ class BrewRecordStore: ObservableObject {
         }.sorted { $0.bestRating > $1.bestRating } // 按最佳评分排序
     }
     
-    // 当用户切换时重新加载数据
-    func reloadForCurrentUser() {
-        loadRecords()
-    }
-    
     // 测试方法：添加测试记录
     func addTestRecord() {
         // 创建测试咖啡豆引用
@@ -242,34 +250,17 @@ class BrewRecordStore: ObservableObject {
     
     // 测试方法：清空所有记录
     func clearAllRecords() {
-        records.removeAll()
-        UserDefaults.standard.removeObject(forKey: saveKey)
-    }
-    
-    // 公开的保存方法
-    func saveRecords() {
-        do {
-            let encoded = try JSONEncoder().encode(records)
-            UserDefaults.standard.set(encoded, forKey: saveKey)
-            print("✅ 成功保存 \(records.count) 条记录 (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
-        } catch {
-            print("❌ 保存失败: \(error)")
-        }
-    }
-    
-    private func loadRecords() {
-        do {
-            if let savedData = UserDefaults.standard.data(forKey: saveKey) {
-                let decoded = try JSONDecoder().decode([BrewRecord].self, from: savedData)
-                records = decoded
-                print("✅ 成功加载 \(records.count) 条记录 (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
-            } else {
-                records = []
-                print("ℹ️ 没有找到保存的数据，初始化为空数组 (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
+        // 在 Firestore 中，删除用户文档下的所有记录
+        guard let userId = userId else { return }
+        db.collection("users").document(userId).collection("brewRecords").getDocuments { snap, err in
+            if let err = err {
+                print("❌ 清空 BrewRecords 失败: \(err)")
+                return
             }
-        } catch {
-            records = []
-            print("❌ 加载失败: \(error)")
+            snap?.documents.forEach { doc in
+                doc.reference.delete()
+            }
+            print("✅ 已清空 BrewRecords (用户: \(userId))")
         }
     }
 }

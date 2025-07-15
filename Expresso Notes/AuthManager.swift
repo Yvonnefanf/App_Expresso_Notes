@@ -62,7 +62,7 @@ class AuthManager: ObservableObject {
     // 重新加载当前用户的数据
     private func reloadDataForCurrentUser() {
         DispatchQueue.main.async {
-            self.brewRecordStore?.reloadForCurrentUser()
+            // self.brewRecordStore?.reloadForCurrentUser() // 已废弃，移除
             self.beanManager?.reloadForCurrentUser()
             self.purchaseManager?.reloadForCurrentUser()
         }

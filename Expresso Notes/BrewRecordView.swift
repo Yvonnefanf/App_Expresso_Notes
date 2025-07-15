@@ -5,6 +5,7 @@ struct BrewRecordView: View {
     @EnvironmentObject var brewRecordStore: BrewRecordStore
     @EnvironmentObject var beanManager: CoffeeBeanManager
     @EnvironmentObject var purchaseManager: PurchaseManager
+    @StateObject var beanViewModel = CoffeeBeanViewModel() // 新增
     
     @State private var selectedCoffeeBean: CoffeeBean?
     @State private var coffeeWeight: String = ""
@@ -135,9 +136,8 @@ struct BrewRecordView: View {
                     }
                 }
                 .sheet(isPresented: $showCoffeeBeanPicker) {
-                    CoffeeBeanPickerView(selectedBean: $selectedCoffeeBean)
-                         .environmentObject(beanManager)
-                  }
+                    CoffeeBeanPickerView(selectedBean: $selectedCoffeeBean, viewModel: beanViewModel)
+                }
                 
                 // 评分弹窗覆盖层
                 if showRatingPopup {
@@ -371,7 +371,7 @@ struct BrewRecordView: View {
             showPurchasePopup = true
             return
         }
-        
+      
         record.rating = rating
         record.ratingDescription = ratingDescription.isEmpty ? nil : ratingDescription
         brewRecordStore.addRecord(record)
@@ -564,7 +564,7 @@ struct BrewRecordView: View {
 // 咖啡豆选择器视图
 struct CoffeeBeanPickerView: View {
     @Binding var selectedBean: CoffeeBean?
-    @EnvironmentObject var beanManager: CoffeeBeanManager
+    @ObservedObject var viewModel: CoffeeBeanViewModel
     @Environment(\.presentationMode) var presentationMode
     @State private var searchText = ""
     
@@ -572,9 +572,9 @@ struct CoffeeBeanPickerView: View {
     
     var filteredBeans: [CoffeeBean] {
         if searchText.isEmpty {
-            return beanManager.coffeeBeans
+            return viewModel.beans
         } else {
-            return beanManager.coffeeBeans.filter { bean in
+            return viewModel.beans.filter { bean in
                 bean.name.localizedCaseInsensitiveContains(searchText) ||
                 bean.brand.localizedCaseInsensitiveContains(searchText)
             }
@@ -647,6 +647,9 @@ struct CoffeeBeanPickerView: View {
                         .imageScale(.medium)
                 }
             )
+        }
+        .onAppear {
+            viewModel.subscribe()
         }
     }
     

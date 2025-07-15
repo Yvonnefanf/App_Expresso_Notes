@@ -306,6 +306,7 @@ struct CustomTabButton: View {
         .environmentObject(AuthManager())
         .environmentObject(BrewRecordStore())
         .environmentObject(CoffeeBeanManager())
+        .environmentObject(CoffeeBeanViewModel())
         .environmentObject(PurchaseManager())
 }
 

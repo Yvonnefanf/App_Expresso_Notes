@@ -16,6 +16,8 @@ class AuthManager: ObservableObject {
     weak var beanManager: CoffeeBeanManager?
     weak var purchaseManager: PurchaseManager?
     
+    private var userListener: ListenerRegistration?
+    
     init() {
         print("AuthManager 初始化")
         loadUserData()
@@ -44,15 +46,14 @@ class AuthManager: ObservableObject {
             
             if let user = user {
                 self?.email = user.email ?? ""
-                // 检查是否是首次登录
                 self?.checkFirstLogin(userId: user.uid)
-                // 用户登录后重新加载数据
+                self?.startUserListener() // 实时监听 Firestore 用户名
                 self?.reloadDataForCurrentUser()
             } else {
                 self?.email = ""
                 self?.username = ""
                 self?.isFirstLogin = false
-                // 用户登出后重新加载数据
+                self?.userListener?.remove() // 登出时移除监听
                 self?.reloadDataForCurrentUser()
             }
         }
@@ -135,6 +136,20 @@ class AuthManager: ObservableObject {
                     // 生成默认用户名
                     self?.generateDefaultUsername(from: self?.email ?? "")
                 }
+            }
+        }
+    }
+    
+    // Firestore 用户名实时监听
+    func startUserListener() {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        userListener?.remove() // 移除旧监听
+        let db = Firestore.firestore()
+        userListener = db.collection("users").document(userId).addSnapshotListener { [weak self] snapshot, error in
+            guard let data = snapshot?.data() else { return }
+            let cloudUsername = data["username"] as? String ?? ""
+            DispatchQueue.main.async {
+                self?.username = cloudUsername
             }
         }
     }

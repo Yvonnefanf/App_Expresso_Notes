@@ -17,7 +17,6 @@ struct Expresso_NotesApp: App {
     
     init() {
         FirebaseApp.configure()
-        print("Firebase 配置完成")
         
         // 打印所有可用字体
         for family in UIFont.familyNames {

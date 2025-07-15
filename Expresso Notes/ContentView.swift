@@ -254,7 +254,6 @@ struct ContentView: View {
     
     // MARK: - 保存首次设置
     private func saveFirstTimeSetup() {
-        print("保存首次设置...")
         authManager.saveFirstTimeSetup(
             username: setupUsername,
             coffeeMachine: setupCoffeeMachine,

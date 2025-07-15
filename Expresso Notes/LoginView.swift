@@ -3,8 +3,8 @@ import FirebaseAuth
 import FirebaseFirestore
 
 struct LoginView: View {
-    @State private var email = "e1322750@u.nus.edu"
-    @State private var password = "zyf1996"
+    @State private var email = ""
+    @State private var password = ""
     @State private var isRegistering: Bool
     @State private var errorMessage = ""
     @State private var verificationMessage = ""
@@ -100,7 +100,6 @@ struct LoginView: View {
                             
                             HStack(spacing: 15) {
                                 Button(action: {
-                                    print("取消重置密码")
                                     showForgetPasswordAlert = false
                                     resetPasswordMessage = ""
                                     showCloseButton = false
@@ -114,7 +113,6 @@ struct LoginView: View {
                                 }
                                 
                                 Button(action: {
-                                    print("发送重置密码邮件")
                                     sendPasswordResetEmail()
                                 }) {
                                     MixedFontText(content: "发送", fontSize: 16)
@@ -183,7 +181,6 @@ struct LoginView: View {
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                             .onChange(of: email) { newValue in
-                                print("邮箱输入变化：\(newValue)")
                             }
                     }
                     
@@ -201,14 +198,12 @@ struct LoginView: View {
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                             .onChange(of: password) { newValue in
-                                print("密码输入变化：\(newValue)")
                             }
                     }
                     // 注册和忘记密码链接 - 紧贴密码输入框，无间隙
                     HStack {
                         if !isRegistering {
                             Button(action: {
-                                print("切换到注册模式")
                                 withAnimation(.easeInOut(duration: 0.3)) {
                                     isRegistering = true
                                 }
@@ -226,7 +221,7 @@ struct LoginView: View {
                             }
                         } else {
                             Button(action: {
-                                print("切换到登录模式")
+                               
                                 withAnimation(.easeInOut(duration: 0.3)) {
                                     isRegistering = false
                                 }
@@ -248,7 +243,7 @@ struct LoginView: View {
                         
                         if !isRegistering {
                             Button(action: {
-                                print("点击忘记密码")
+                                
                                 resetPasswordEmail = email // 预填充当前输入的邮箱
                                 resetPasswordMessage = "" // 清空之前的消息
                                 showCloseButton = false // 重置关闭按钮状态
@@ -266,7 +261,9 @@ struct LoginView: View {
                 
                 // 登录按钮 - 变短
                 Button(action: {
-                    print("点击了\(isRegistering ? "注册" : "登录")按钮")
+                    // 清空之前的错误信息
+                    errorMessage = ""
+                    
                     if isRegistering {
                         register()
                     } else {
@@ -346,22 +343,22 @@ struct LoginView: View {
     }
     
     private func login() {
-        print("开始登录流程")
-        print("尝试登录，邮箱：\(email)")
         Auth.auth().signIn(withEmail: email, password: password) { result, error in
-            if let error = error {
-                print("登录失败：\(error.localizedDescription)")
-                print("错误详情：\(error)")
-                errorMessage = translateFirebaseError(error)
-            } else {
-                if let user = Auth.auth().currentUser {
-                    if !user.isEmailVerified {
-                        errorMessage = "请先验证您的邮箱"
-                        try? Auth.auth().signOut()
-                    } else {
-                        print("登录成功")
-                        print("当前用户：\(user.email ?? "nil")")
-                        dismiss()
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("登录失败：\(error.localizedDescription)")
+                    print("错误详情：\(error)")
+                    self.errorMessage = self.translateFirebaseError(error)
+                } else {
+                    if let user = Auth.auth().currentUser {
+                        if !user.isEmailVerified {
+                            self.errorMessage = "请先验证您的邮箱"
+                            try? Auth.auth().signOut()
+                        } else {
+                            print("登录成功")
+                            print("当前用户：\(user.email ?? "nil")")
+                            self.dismiss()
+                        }
                     }
                 }
             }
@@ -369,13 +366,8 @@ struct LoginView: View {
     }
     
     private func register() {
-        print("🔥 开始注册流程")
-        print("📧 尝试注册，邮箱：\(email)")
-        print("🔐 密码长度：\(password.count)")
-        
-        // 设置注册状态，防止跳转到主界面
+       
         authManager.isRegistering = true
-        print("🚫 设置注册状态，阻止界面跳转")
         
         // 清空之前的错误信息和验证提示
         errorMessage = ""
@@ -383,30 +375,27 @@ struct LoginView: View {
         
         // 验证邮箱格式
         guard email.contains("@") && email.contains(".") else {
-            print("❌ 邮箱格式验证失败")
+            
             authManager.isRegistering = false
             errorMessage = "请输入有效的邮箱地址"
             return
         }
-        print("✅ 邮箱格式验证通过")
+      
         
         // 验证密码长度
         guard password.count >= 6 else {
-            print("❌ 密码长度验证失败")
+           
             authManager.isRegistering = false
             errorMessage = "密码长度至少为6位"
             return
         }
-        print("✅ 密码长度验证通过")
         
-        print("🚀 开始调用Firebase创建用户...")
+        
+      
         
         Auth.auth().createUser(withEmail: email, password: password) { result, error in
             if let error = error {
-                print("❌ 注册失败：\(error.localizedDescription)")
-                print("🔍 错误详情：\(error)")
-                print("🔢 错误代码：\(error._code)")
-                print("🏷️ 错误域：\(error._domain)")
+         
                 
                 // 使用Firebase错误码翻译显示中文错误信息
                 DispatchQueue.main.async {
@@ -414,23 +403,18 @@ struct LoginView: View {
                     self.errorMessage = self.translateFirebaseError(error)
                 }
             } else if let user = result?.user {
-                print("✅ 用户创建成功，用户ID：\(user.uid)")
-                print("📧 开始发送验证邮件...")
-                
-                // 立即登出用户，防止跳转到主界面
-                print("🚪 立即登出用户，防止跳转到主界面")
+             
                 try? Auth.auth().signOut()
                 
                 // 发送验证邮件
                 user.sendEmailVerification { error in
                     DispatchQueue.main.async {
                         if let error = error {
-                            print("❌ 发送验证邮件失败：\(error.localizedDescription)")
+                            
                             self.authManager.isRegistering = false
                             self.errorMessage = "发送验证邮件失败"
                         } else {
-                            print("✅ 验证邮件发送成功！")
-                            print("📱 设置验证邮件提示信息")
+                        
                             
                             // 重置注册状态
                             self.authManager.isRegistering = false
@@ -473,12 +457,10 @@ struct LoginView: View {
     
     // 发送重置密码邮件
     private func sendPasswordResetEmail() {
-        print("🔄 开始发送重置密码邮件")
-        print("📧 目标邮箱：\(resetPasswordEmail)")
+       
         
         // 验证邮箱格式
         guard resetPasswordEmail.contains("@") && resetPasswordEmail.contains(".") else {
-            print("❌ 邮箱格式验证失败")
             resetPasswordMessage = "请输入有效的邮箱地址"
             return
         }
@@ -489,8 +471,7 @@ struct LoginView: View {
         Auth.auth().sendPasswordReset(withEmail: resetPasswordEmail) { error in
             DispatchQueue.main.async {
                 if let error = error {
-                    print("❌ 发送重置密码邮件失败：\(error.localizedDescription)")
-                    print("🔍 错误详情：\(error)")
+                  
                     
                     // 处理常见错误
                     let nsError = error as NSError
@@ -511,7 +492,7 @@ struct LoginView: View {
                         self.resetPasswordMessage = "发送失败，请稍后重试"
                     }
                 } else {
-                    print("✅ 重置密码邮件发送成功")
+                    
                     self.resetPasswordMessage = "重置密码邮件发送成功"
                     
                     // 显示关闭按钮，让用户手动关闭

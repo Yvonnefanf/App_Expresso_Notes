@@ -225,31 +225,3 @@ struct BrewRecordDetailView: View {
         }
     }
 }
-
-// MARK: - MOCK data for preview (only open when testing / debugging)
-//struct BrewRecordDetailView_Previews: PreviewProvider {
-// 
-//    
-//    static var previews: some View {
-//        let testBean1 = CoffeeBeanReference(
-//            id: UUID(), // 使用固定ID便于测试
-//            name: "埃塞俄比亚耶加雪菲",
-//            brand: "星巴克",
-//            roastLevel: "浅焙"
-//        )
-//        NavigationView {
-//            BrewRecordDetailView(record: BrewRecord(
-//                date: Date(),
-//                coffeeBean: testBean1,
-//                coffeeWeight: "18",
-//                waterTemperature: 92,
-//                grindSize: 4,
-//                preInfusionTime: "30",
-//                extractionTime: "120",
-//                yieldAmount: "36",
-//                rating: 8,
-//                ratingDescription: "haode"
-//            ))
-//        }
-//    }
-//} 

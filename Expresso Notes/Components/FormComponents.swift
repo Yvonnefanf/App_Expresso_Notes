@@ -6,8 +6,6 @@
 //
 import SwiftUI
 
-// 自定义 TextField 样式（已废弃，直接在TextField上设置字体）
-
 func parameterInputField(
     title: String,
     binding: Binding<String>,
@@ -43,7 +41,7 @@ func parameterInputField(
             }
 
             TextField("", text: binding)
-                .font(.custom("平方江南体", size: 16))
+                .font(.system(size: 16))
                 .keyboardType(keyboardType)
                 .padding(12)
                 .foregroundColor(textColor)

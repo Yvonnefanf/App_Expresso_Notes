@@ -20,6 +20,7 @@ struct BrewRecordView: View {
     @State private var tempRecord: BrewRecord? = nil
     @State private var showCoffeeBeanPicker = false
     @State private var showPurchasePopup = false
+    @State private var isSaving = false
     
     // MARK: - 校验状态
     // 输入校验状态
@@ -216,13 +217,13 @@ struct BrewRecordView: View {
                     ZStack(alignment: .topLeading) {
                         if ratingDescription.isEmpty {
                             Text("描述一下这次萃取的风味、口感等...")
-                                .font(.custom("平方江南体", size: 14))
+                                .font(.system(size: 14))
                                 .foregroundColor(Color.theme.textColor.opacity(0.5))
                                 .padding(EdgeInsets(top: 8, leading: 6, bottom: 8, trailing: 6))
                         }
                         
                         TextEditor(text: $ratingDescription)
-                            .font(.custom("平方江南体", size: 14))
+                            .font(.system(size: 14))
                             .foregroundColor(Color.theme.textColor)
                             .frame(minHeight: 100)
                             .padding(4)
@@ -239,8 +240,12 @@ struct BrewRecordView: View {
                 // 按钮
                 HStack(spacing: 16) {
                     
-                    Button("完成") {
-                        saveRecordWithRating()
+                    Button(action: saveRecordWithRating) {
+                        if isSaving {
+                            ProgressView()
+                        } else {
+                            Text("完成")
+                        }
                     }
                     .font(.custom("平方江南体", size: 18))
                     .frame(width: 120)
@@ -248,6 +253,7 @@ struct BrewRecordView: View {
                     .foregroundColor(Color.theme.textColor)
                     .background(Color.theme.buttonColor)
                     .cornerRadius(8)
+                    .disabled(isSaving)
                 }
             }
             .padding()
@@ -372,18 +378,21 @@ struct BrewRecordView: View {
             return
         }
       
+        isSaving = true
         record.rating = rating
         record.ratingDescription = ratingDescription.isEmpty ? nil : ratingDescription
-        brewRecordStore.addRecord(record)
+        brewRecordStore.addRecord(record) { error in
+            isSaving = false
+            if error == nil {
+                dismiss()
+            } else {
+                // 可选：显示错误提示
+            }
+        }
         
         // 使用免费机会（如果未解锁）
         if !purchaseManager.isUnlocked {
             purchaseManager.useFreeAttempt()
-        }
-        
-        // 短暂延迟后关闭表单，使评分弹窗消失动画有时间完成
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            dismiss()
         }
     }
     
@@ -512,7 +521,7 @@ struct BrewRecordView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 50)
                     .background(Color.theme.buttonColor)
-                    .foregroundColor(Color.theme.textColor)
+                    .foregroundColor(Color.theme.textColor.opacity(0.8))
                     .cornerRadius(25)
                     .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
                 }

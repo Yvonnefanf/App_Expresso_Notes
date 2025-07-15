@@ -62,7 +62,9 @@ struct UserView: View {
                             
 //                            menuItem(icon: "lock", label: "修改密码") {}
                             Divider().padding(.vertical, 8)
-                            menuItem(icon: "questionmark.circle", label: "帮助与支持") {}
+                            menuItem(icon: "questionmark.circle", label: "支持与帮助") {
+                                sendSupportEmail()
+                            }
                             Button(action: { showLogoutAlert = true }) {
                                 HStack {
                                     Image(systemName: "arrowshape.turn.up.left")
@@ -313,7 +315,7 @@ struct UserView: View {
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
                         .background(Color.theme.buttonColor)
-                        .foregroundColor(.white)
+                        .foregroundColor(Color.theme.textColor.opacity(0.8))
                         .cornerRadius(25)
                         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 3)
                     }
@@ -382,16 +384,13 @@ struct UserView: View {
                     MixedFontText(content: "咖啡机型号", fontSize: 16)
                         .foregroundColor(Color.theme.textColor)
                     TextField("输入咖啡机型号", text: $coffeeMachine)
-                        .font(.custom("平方江南体", size: 16))
+                        .font(.system(size: 16))
                         .padding(12)
                         .foregroundColor(Color.theme.textColor)
                         .background(Color(UIColor.systemGray6))
                         .cornerRadius(8)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
-                        .onTapGesture {
-                            print("🔘 点击咖啡机输入框，当前值: '\(coffeeMachine)'")
-                        }
                 }
                 
                 // 磨豆机型号
@@ -399,23 +398,19 @@ struct UserView: View {
                     MixedFontText(content: "磨豆机型号", fontSize: 16)
                         .foregroundColor(Color.theme.textColor)
                     TextField("输入磨豆机型号", text: $grinder)
-                        .font(.custom("平方江南体", size: 16))
+                        .font(.system(size: 16))
                         .padding(12)
                         .foregroundColor(Color.theme.textColor)
                         .background(Color(UIColor.systemGray6))
                         .cornerRadius(8)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
-                        .onTapGesture {
-                            print("🔘 点击磨豆机输入框，当前值: '\(grinder)'")
-                        }
                 }
                 
                 Spacer()
                 
                 // 保存按钮
                 Button(action: {
-                    print("🔘 点击保存按钮")
                     saveDeviceSettings()
                 }) {
                     HStack {
@@ -482,11 +477,9 @@ struct UserView: View {
     // MARK: - 加载设备设置
     private func loadDeviceSettings() {
         guard let userId = Auth.auth().currentUser?.uid else {
-            print("❌ 无法获取用户ID")
             return
         }
         
-        print("📱 加载设备设置...")
         let db = Firestore.firestore()
         
         db.collection("users").document(userId).getDocument { document, error in
@@ -496,22 +489,12 @@ struct UserView: View {
                     let loadedCoffeeMachine = (data?["coffeeMachine"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                     let loadedGrinder = (data?["grinder"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                     
-                    print("✅ 设备设置加载成功")
-                    print("☕ 咖啡机原始数据: '\(data?["coffeeMachine"] as? String ?? "nil")'")
-                    print("☕ 咖啡机处理后: '\(loadedCoffeeMachine)' (长度: \(loadedCoffeeMachine.count))")
-                    print("⚙️ 磨豆机原始数据: '\(data?["grinder"] as? String ?? "nil")'")
-                    print("⚙️ 磨豆机处理后: '\(loadedGrinder)' (长度: \(loadedGrinder.count))")
                     
                     // 明确更新UI状态
                     self.coffeeMachine = loadedCoffeeMachine
                     self.grinder = loadedGrinder
                     
-                    print("🔄 UI状态更新完成")
-                    print("☕ UI咖啡机: '\(self.coffeeMachine)'")
-                    print("⚙️ UI磨豆机: '\(self.grinder)'")
                 } else {
-                    print("❌ 无法加载设备设置: \(error?.localizedDescription ?? "文档不存在")")
-                    // 确保为空时UI也是空的
                     self.coffeeMachine = ""
                     self.grinder = ""
                 }
@@ -522,13 +505,9 @@ struct UserView: View {
     // MARK: - 保存设备设置
     private func saveDeviceSettings() {
         guard let userId = Auth.auth().currentUser?.uid else {
-            print("❌ 无法获取用户ID")
             return
         }
         
-        print("💾 保存设备设置...")
-        print("☕ 咖啡机: '\(coffeeMachine)'")
-        print("⚙️ 磨豆机: '\(grinder)'")
         
         // 设置保存中状态
         isSavingDeviceSettings = true
@@ -540,23 +519,30 @@ struct UserView: View {
             "updatedAt": FieldValue.serverTimestamp()
         ]
         
-        print("📤 开始上传数据...")
-        
+ 
         db.collection("users").document(userId).setData(deviceData, merge: true) { error in
             DispatchQueue.main.async {
                 // 重置保存状态
                 self.isSavingDeviceSettings = false
                 
                 if let error = error {
-                    print("❌ 保存设备设置失败：\(error.localizedDescription)")
+                    print("保存设备设置失败：\(error.localizedDescription)")
                     // TODO: 可以添加错误弹窗提示用户
                 } else {
-                    print("✅ 设备设置保存成功")
-                    print("🚪 关闭设备设置弹窗")
                     // 关闭弹窗
                     self.showSettingsSheet = false
                 }
             }
+        }
+    }
+    
+    private func sendSupportEmail() {
+        let email = "twinplanet.studio@outlook.com"
+        let subject = "Expresso Notes 用户支持"
+        let body = "请在此输入您的问题或建议："
+        let urlString = "mailto:\(email)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        if let url = URL(string: urlString) {
+            UIApplication.shared.open(url)
         }
     }
 }
@@ -589,7 +575,7 @@ struct ProfileSettingsView: View {
                         }
                         
                         TextField("", text: $tempUsername)
-                            .font(.custom("平方江南体", size: 16))
+                            .font(.system(size: 16))
                             .padding(12)
                             .foregroundColor(Color.theme.textColor)
                             .cornerRadius(8)

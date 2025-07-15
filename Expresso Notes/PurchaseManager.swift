@@ -2,6 +2,7 @@ import Foundation
 import StoreKit
 import Combine
 import FirebaseAuth
+import FirebaseFirestore
 
 @MainActor
 class PurchaseManager: NSObject, ObservableObject {
@@ -42,6 +43,7 @@ class PurchaseManager: NSObject, ObservableObject {
     override init() {
         super.init()
         loadStoredData()
+        loadFromCloud() // 新增
         startListeningForTransactions()
         Task {
             await loadProducts()
@@ -57,6 +59,7 @@ class PurchaseManager: NSObject, ObservableObject {
     /// 当用户切换时重新加载数据
     func reloadForCurrentUser() {
         loadStoredData()
+        loadFromCloud() // 新增
     }
     
     /// 检查是否可以创建新记录
@@ -71,12 +74,10 @@ class PurchaseManager: NSObject, ObservableObject {
     /// 使用一次免费机会
     func useFreeAttempt() {
         guard !isUnlocked && freeUsageCount < maxFreeUsage else { return }
-        
         freeUsageCount += 1
         saveStoredData()
+        syncToCloud() // 新增
         checkCanCreateRecord()
-        
-        print("📱 使用免费机会: \(freeUsageCount)/\(maxFreeUsage) (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
     }
     
     /// 获取剩余免费次数
@@ -104,25 +105,19 @@ class PurchaseManager: NSObject, ObservableObject {
                 isUnlocked = true
                 purchaseStatus = .purchased
                 saveStoredData()
+                syncToCloud() // 新增
                 checkCanCreateRecord()
-                
-                print("✅ 购买成功！")
                 
             case .userCancelled:
                 purchaseStatus = .idle
-                print("❌ 用户取消购买")
-                
             case .pending:
                 purchaseStatus = .idle
-                print("⏳ 购买等待中...")
-                
             @unknown default:
                 purchaseStatus = .failed(PurchaseError.unknown)
             }
             
         } catch {
             purchaseStatus = .failed(error)
-            print("❌ 购买失败: \(error)")
         }
     }
     
@@ -140,18 +135,15 @@ class PurchaseManager: NSObject, ObservableObject {
                     isUnlocked = true
                     purchaseStatus = .restored
                     saveStoredData()
+                    syncToCloud() // 新增
                     checkCanCreateRecord()
-                    print("✅ 恢复购买成功！")
                     return
                 }
             }
             
             purchaseStatus = .idle
-            print("⚠️ 没有找到可恢复的购买记录")
-            
         } catch {
             purchaseStatus = .failed(error)
-            print("❌ 恢复购买失败: \(error)")
         }
     }
     
@@ -164,10 +156,8 @@ class PurchaseManager: NSObject, ObservableObject {
             let storeProducts = try await Product.products(for: [productID])
             products = storeProducts
             purchaseStatus = .idle
-            print("✅ 产品加载成功: \(storeProducts.count) 个产品")
         } catch {
             purchaseStatus = .failed(error)
-            print("❌ 产品加载失败: \(error)")
         }
     }
     
@@ -180,12 +170,13 @@ class PurchaseManager: NSObject, ObservableObject {
                     if transaction.productID == productID {
                         isUnlocked = true
                         saveStoredData()
+                        syncToCloud() // 新增
                         checkCanCreateRecord()
                     }
                     
                     await transaction.finish()
                 } catch {
-                    print("❌ 交易验证失败: \(error)")
+                   
                 }
             }
         }
@@ -205,16 +196,35 @@ class PurchaseManager: NSObject, ObservableObject {
         freeUsageCount = defaults.integer(forKey: freeUsageKey)
         isUnlocked = defaults.bool(forKey: unlockStatusKey)
         checkCanCreateRecord()
-        
-        print("📱 加载存储数据 - 免费次数: \(freeUsageCount), 已解锁: \(isUnlocked) (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
     }
     
     private func saveStoredData() {
         let defaults = UserDefaults.standard
         defaults.set(freeUsageCount, forKey: freeUsageKey)
         defaults.set(isUnlocked, forKey: unlockStatusKey)
-        
-        print("💾 保存数据 - 免费次数: \(freeUsageCount), 已解锁: \(isUnlocked) (用户: \(Auth.auth().currentUser?.uid ?? "anonymous"))")
+    }
+    
+    // --- 云端同步相关 ---
+    private func syncToCloud() {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        let db = Firestore.firestore()
+        db.collection("users").document(userId).setData([
+            "isUnlocked": isUnlocked,
+            "freeUsageCount": freeUsageCount
+        ], merge: true)
+    }
+    
+    private func loadFromCloud() {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        let db = Firestore.firestore()
+        db.collection("users").document(userId).getDocument { [weak self] doc, error in
+            guard let data = doc?.data() else { return }
+            DispatchQueue.main.async {
+                self?.isUnlocked = data["isUnlocked"] as? Bool ?? false
+                self?.freeUsageCount = data["freeUsageCount"] as? Int ?? 0
+                self?.checkCanCreateRecord()
+            }
+        }
     }
 }
 

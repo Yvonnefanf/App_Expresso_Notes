@@ -62,7 +62,7 @@ class AuthManager: ObservableObject {
     // 重新加载当前用户的数据
     private func reloadDataForCurrentUser() {
         DispatchQueue.main.async {
-            // self.brewRecordStore?.reloadForCurrentUser() // 已废弃，移除
+            self.brewRecordStore?.reloadForCurrentUser() // 已废弃，移除
             self.beanManager?.reloadForCurrentUser()
             self.purchaseManager?.reloadForCurrentUser()
         }
@@ -157,14 +157,9 @@ class AuthManager: ObservableObject {
     // 保存首次设置信息
     func saveFirstTimeSetup(username: String, coffeeMachine: String, grinder: String) {
         guard let userId = Auth.auth().currentUser?.uid else {
-            print("❌ 无法获取用户ID")
             return
         }
         
-        print("💾 保存首次设置信息...")
-        print("📝 用户名: \(username)")
-        print("☕ 咖啡机: \(coffeeMachine)")
-        print("⚙️ 磨豆机: \(grinder)")
         
         let db = Firestore.firestore()
         let userData: [String: Any] = [
@@ -182,7 +177,6 @@ class AuthManager: ObservableObject {
                 if let error = error {
                     print("❌ 保存首次设置失败：\(error.localizedDescription)")
                 } else {
-                    print("✅ 首次设置保存成功")
                     // 更新本地状态
                     self?.username = username
                     self?.isFirstLogin = false

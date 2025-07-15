@@ -73,6 +73,8 @@ struct CoffeeBeanView: View {
     @EnvironmentObject var brewRecordStore: BrewRecordStore
     @State private var showingAddSheet = false
     @Environment(\.presentationMode) var presentationMode
+    @State private var showDeleteAlert = false // 新增
+    @State private var beanToDelete: CoffeeBean? = nil // 新增
     
     // 定义网格布局
     private let gridItems = [
@@ -128,6 +130,21 @@ struct CoffeeBeanView: View {
             }
             .sheet(isPresented: $showingAddSheet) {
                 AddCoffeeBeanView(viewModel: viewModel)
+            }
+            .alert(isPresented: $showDeleteAlert) {
+                Alert(
+                    title: Text("删除咖啡豆"),
+                    message: Text("确定要删除该咖啡豆吗？此操作不可恢复。"),
+                    primaryButton: .destructive(Text("删除")) {
+                        if let bean = beanToDelete {
+                            viewModel.delete(bean)
+                        }
+                        beanToDelete = nil
+                    },
+                    secondaryButton: .cancel {
+                        beanToDelete = nil
+                    }
+                )
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
@@ -207,6 +224,7 @@ struct AddCoffeeBeanView: View {
     @State private var processingMethod = ""
     @State private var roastLevel = CoffeeBean.RoastLevel.medium
     @State private var flavors = ""
+    @State private var keyboardHeight: CGFloat = 0 // 新增
     
     let flavorSuggestions = ["柑橘", "巧克力", "坚果", "花香", "浆果", "焦糖", "水果", "清新", "醇厚", "牛奶", "烟草","茶香","玫瑰"]
     
@@ -277,6 +295,9 @@ struct AddCoffeeBeanView: View {
                     .padding(.vertical, 20)
                 }
             }
+            .padding(.bottom, keyboardHeight) // 键盘避让
+            .onAppear { startKeyboardObserver() }
+            .onDisappear { NotificationCenter.default.removeObserver(self) }
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .onTapGesture {
                 hideKeyboard()
@@ -300,6 +321,20 @@ struct AddCoffeeBeanView: View {
                     })
                 }
             }
+        }
+    }
+    
+    private func startKeyboardObserver() {
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillChangeFrameNotification, object: nil, queue: .main) { notif in
+            if let frame = notif.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                let screenHeight = UIScreen.main.bounds.height
+                let keyboardTop = frame.origin.y
+                let height = max(0, screenHeight - keyboardTop)
+                self.keyboardHeight = height
+            }
+        }
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+            self.keyboardHeight = 0
         }
     }
     

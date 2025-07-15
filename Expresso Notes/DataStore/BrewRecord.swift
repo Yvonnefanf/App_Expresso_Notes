@@ -73,14 +73,21 @@ class BrewRecordStore: ObservableObject {
                 }
             }
     }
+    
+    // 重新加载当前用户的数据
+    func reloadForCurrentUser() {
+        subscribe()
+    }
 
-    func addRecord(_ record: BrewRecord) {
-        guard let userId = userId else { return }
+    func addRecord(_ record: BrewRecord, completion: ((Error?) -> Void)? = nil) {
+        guard let userId = userId else { completion?(NSError(domain: "BrewRecordStore", code: -1, userInfo: [NSLocalizedDescriptionKey: "No userId"])) ; return }
         let doc = db.collection("users").document(userId).collection("brewRecords").document(record.id.uuidString)
         do {
-            try doc.setData(from: record)
+            try doc.setData(from: record) { error in
+                completion?(error)
+            }
         } catch {
-            print("❌ 保存 BrewRecord 失败: \(error)")
+            completion?(error)
         }
     }
 
@@ -88,7 +95,7 @@ class BrewRecordStore: ObservableObject {
         guard let userId = userId else { return }
         db.collection("users").document(userId).collection("brewRecords").document(record.id.uuidString).delete { err in
             if let err = err {
-                print("❌ 删除 BrewRecord 失败: \(err)")
+                
             }
         }
     }
@@ -260,7 +267,6 @@ class BrewRecordStore: ObservableObject {
             snap?.documents.forEach { doc in
                 doc.reference.delete()
             }
-            print("✅ 已清空 BrewRecords (用户: \(userId))")
         }
     }
 }

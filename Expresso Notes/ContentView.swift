@@ -6,7 +6,8 @@
 //
 
 import SwiftUI
-import FirebaseCore
+import Foundation
+import FirebaseFirestore
 import Combine
 
 // 定义通知名称

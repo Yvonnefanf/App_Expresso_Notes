@@ -160,6 +160,24 @@ struct BrewRecordView: View {
                         .transition(.scale)
                         .zIndex(1000)
                 }
+                // 全屏保存中 loading 遮罩
+                if isSaving {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                        .onTapGesture {}
+                    VStack(spacing: 20) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: Color.theme.buttonColor))
+                            .scaleEffect(1.5)
+                        Text("保存中...")
+                            .font(.system(size: 16))
+                            .foregroundColor(Color.theme.textColor)
+                    }
+                    .padding(30)
+                    .background(Color.white)
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                }
             }
             .onTapGesture {
                 hideKeyboard()
@@ -241,11 +259,7 @@ struct BrewRecordView: View {
                 HStack(spacing: 16) {
                     
                     Button(action: saveRecordWithRating) {
-                        if isSaving {
-                            ProgressView()
-                        } else {
-                            Text("完成")
-                        }
+                        Text("完成")
                     }
                     .font(.custom("平方江南体", size: 18))
                     .frame(width: 120)

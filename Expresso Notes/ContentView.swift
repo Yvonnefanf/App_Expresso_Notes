@@ -28,9 +28,12 @@ struct ContentView: View {
     @State private var setupUsername = ""
     @State private var setupCoffeeMachine = ""
     @State private var setupGrinder = ""
+    @State private var showNoBeanAlert = false
     
     // 添加通知观察者
     @State private var notificationSubscription: AnyCancellable?
+    
+    @StateObject private var coffeeBeanViewModel = CoffeeBeanViewModel() // 新增
     
     var body: some View {
         ZStack {
@@ -53,8 +56,13 @@ struct ContentView: View {
                                             .offset(y: 40)
                                         
                                         Button(action: {
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
-                                                showBrewRecord = true
+                                            if coffeeBeanViewModel.beans.isEmpty {
+                                                print("coffeeBeanViewModel.beans",coffeeBeanViewModel.beans)
+                                                showNoBeanAlert = true
+                                            } else {
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0) {
+                                                    showBrewRecord = true
+                                                }
                                             }
                                         }) {
                                             Image("start_button")
@@ -113,6 +121,7 @@ struct ContentView: View {
                     }
                 }
                 .onAppear {
+                    coffeeBeanViewModel.subscribe() // 确保首页监听云端咖啡豆
                     // 设置通知监听（原来的代码）
                     notificationSubscription = NotificationCenter.default
                         .publisher(for: .switchToTab)
@@ -143,6 +152,13 @@ struct ContentView: View {
                     }
                 } message: {
                     Text("确定要退出登录吗？")
+                }
+                .alert("请先添加咖啡豆", isPresented: $showNoBeanAlert) {
+                    Button("去添加咖啡豆") {
+                        selectedTab = 2 // 跳转到咖啡豆界面
+                    }
+                } message: {
+                    Text("您还没有添加任何咖啡豆，无法开始记录。请先添加咖啡豆。")
                 }
                 .sheet(isPresented: $showBrewRecord) {
                     BrewRecordView()
